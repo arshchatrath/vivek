@@ -66,8 +66,8 @@
 }
 
 #catalog .product-photo img { padding: 5%; }
-:is(.product-photo, .detail-photo) > img[hidden],
-:is(.product-photo, .detail-photo):has(> img:not([hidden])) > .product-photo-fallback { display: none; }
+:is(.product-photo, .detail-photo) > img:is([hidden], [data-broken]),
+:is(.product-photo, .detail-photo):has(> img:not([hidden], [data-broken])) > .product-photo-fallback { display: none; }
 .product-photo-fallback { padding: 4px; text-align: center; }
 #catalog .product-body { padding: 0; gap: 4px; }
 #catalog .product-name { margin: 0; }
@@ -83,7 +83,7 @@
 
 #catalog .product-price { margin: 0; }
 #catalog .compare-add { margin: 0; border: 0; padding: 0 4px; white-space: nowrap; }
-#catalog :is(.brand-tab, .compare-add) { font-size: 13px; font-weight: 680; }
+#catalog :is(.compare-add, .catalog-pagination .brand-tab) { font-size: 13px; font-weight: 680; }
 #catalog .compare-add.selected { color: var(--moss); font-weight: 800; }
 #catalog .catalog-pagination { margin-top: 12px; }
 .empty-state > p { margin: 0 0 10px; }
@@ -131,6 +131,10 @@
   #catalog .product-shelf .product-photo { height: 124px; }
 }
 
+@media (max-width: 1100px) {
+  #catalog .brand-tabs .brand-tab { font-size: 13px; font-weight: 680; }
+}
+
 @media (min-width: 640px) and (max-height: 800px) {
   #catalog {
     --padt: clamp(92px, 12svh, 108px);
@@ -142,6 +146,7 @@
   #catalog { --padt: clamp(72px, 9svh, 84px); }
   .vivek-app main > #catalog:has(.product-ledger) { min-height: 200lvh; }
   .product-ledger { grid-template-columns: minmax(0, 1fr); }
+  #catalog .product-ledger .product-card { padding-block: 12px; }
   .product-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
   #catalog .catalog-controls { gap: 10px; }
   #catalog .catalog-search { flex-basis: 100%; max-width: none; }
@@ -159,5 +164,5 @@
   }
   #catalog .product-open { grid-template-columns: 48px minmax(0, 1fr); min-height: 48px; }
   #catalog .product-body { gap: 3px; }
-  #catalog .product-shelf .product-photo { height: clamp(105px, 34vw, 154px); }
+  #catalog .product-shelf .product-photo { height: clamp(114px, 40vw, 154px); }
 }
