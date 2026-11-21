@@ -126,8 +126,8 @@ function SourceNotes({ count, discovered, generatedAt, example }: { count: numbe
 
 function CompareBar({ count, clear, open }: { count: number; clear: () => void; open: () => void }) {
   return <div className="compare-bar">
-    <div className="wrap compare-bar-inner">
-      <div><strong>{count} selected</strong><span>Choose 2–4 products</span></div>
+    <div className="compare-bar-inner">
+      <div><strong role="status">{count} selected</strong><span>Choose 2–4 products</span></div>
       <div>
         <button type="button" onClick={clear}>Clear</button>
         <button className="primary-action" type="button" disabled={count < 2} onClick={open}>Compare products <span aria-hidden="true">↗</span></button>
@@ -164,6 +164,14 @@ type CatalogActions = {
   setDetail: (product: Product) => void;
 };
 
+function ProductPhoto({ product, detail = false }: { product: Product; detail?: boolean }) {
+  return <span className={detail ? "detail-photo" : "product-photo"}>
+    <span className="product-photo-fallback" aria-hidden="true">{product.brand}</span>
+    {product.image_url && <img src={product.image_url} alt="" loading={detail ? "eager" : "lazy"}
+      onError={(event) => { event.currentTarget.hidden = true; }} />}
+  </span>;
+}
+
 function ProductCard({ product, selected, atLimit, toggle, setDetail }: CatalogActions & {
   product: Product;
   selected: boolean;
@@ -172,9 +180,7 @@ function ProductCard({ product, selected, atLimit, toggle, setDetail }: CatalogA
   return (
     <article className="product-card">
       <button className="product-open" type="button" onClick={() => setDetail(product)} aria-label={`Open ${product.name} details`}>
-        <span className="product-photo">
-          {product.image_url ? <img src={product.image_url} alt="" loading="lazy" /> : <span>{product.brand}</span>}
-        </span>
+        <ProductPhoto product={product} />
         <span className="product-body">
           <span className="product-brand">{product.brand} · {product.region}</span>
           <strong className="product-name">{product.name} <span className="listing-arrow" aria-hidden="true">↗</span></strong>
@@ -218,11 +224,20 @@ function interleaveBrands(products: Product[]) {
 function filterCatalog(products: Product[], query: string, brand: string) {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   if (!words.length && brand === "All brands") return interleaveBrands(products);
-  return products.filter((product) => {
+  const matches = products.filter((product) => {
+    if (brand !== "All brands" && product.brand !== brand) return false;
     const text = [product.name, product.brand, product.category, product.description, ...(product.ingredients ?? [])]
       .join(" ").toLocaleLowerCase();
-    return (brand === "All brands" || product.brand === brand) && words.every((word) => text.includes(word));
+    return words.every((word) => text.includes(word));
   });
+  if (!words.length) return matches;
+  const phrase = words.join(" ");
+  const titleScore = (product: Product) => {
+    const name = product.name.toLocaleLowerCase();
+    if (name === phrase) return 2;
+    return words.every((word) => name.includes(word)) ? 1 : 0;
+  };
+  return matches.sort((first, second) => titleScore(second) - titleScore(first));
 }
 
 function CatalogControls({ query, brand, onQuery, onBrand }: {
@@ -235,7 +250,7 @@ function CatalogControls({ query, brand, onQuery, onBrand }: {
     <div className="catalog-controls">
       <div className="catalog-search">
         <label htmlFor="catalog-search">Search products</label>
-        <input id="catalog-search" value={query} onChange={(event) => onQuery(event.target.value)} placeholder="Try a product name or category" />
+        <input id="catalog-search" type="search" value={query} onChange={(event) => onQuery(event.target.value)} placeholder="Try a product name or category" />
       </div>
       <div className="catalog-brand-picker">
         <label htmlFor="catalog-brand">Filter by brand</label>
@@ -300,7 +315,15 @@ function Catalog({ products, selected, toggle, setDetail, comparison }: CatalogA
         </p>
         {pageProducts.length > 0 && <div className="product-shelf">{pageProducts.slice(0, 4).map(renderProduct)}</div>}
         {pageProducts.length > 4 && <div className="product-ledger">{pageProducts.slice(4).map(renderProduct)}</div>}
-        {!filtered.length && <p className="empty-state">Try another product name or choose all brands.</p>}
+        {!filtered.length && <div className="empty-state">
+          <p>Try another product name or clear your filters.</p>
+          <button className="brand-tab" type="button" onClick={() => {
+            setQuery("");
+            setBrand("All brands");
+            setPage(0);
+            document.getElementById("catalog-search")?.focus();
+          }}>Clear filters</button>
+        </div>}
         {filtered.length > productsPerPage && <CatalogPagination page={page} last={end === filtered.length} goToPage={goToPage} />}
         {comparison}
       </div>
@@ -417,7 +440,7 @@ function ProductDetail({ detail, setDetail }: { detail: Product | null; setDetai
   const originalPrice = detail.currency === "USD" && typeof detail.price === "number" ? dollars.format(detail.price) : null;
   return (
     <Dialog kind="detail" title="detail-title" onDismiss={() => setDetail(null)}>
-      <div className="detail-photo">{detail.image_url && <img src={detail.image_url} alt="" />}</div>
+      <ProductPhoto product={detail} detail />
       <div className="detail-info">
         <span className="product-brand">{detail.brand} · {detail.region}</span>
         <h2 id="detail-title">{detail.name}</h2>

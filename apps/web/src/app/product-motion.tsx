@@ -11,7 +11,7 @@ export default function ProductMotion() {
     async function lift(event: PointerEvent) {
       if (!media.matches || event.pointerType === "touch") return;
       const frame = (event.target as Element | null)?.closest<HTMLElement>(".product-shelf .product-photo, .tool-visual, .source-visual-link");
-      const image = frame?.querySelector("img");
+      const image = frame?.querySelector("img:not([hidden])");
       if (!frame || !image || (event.relatedTarget instanceof Node && frame.contains(event.relatedTarget))) return;
       const { gsap } = await import("gsap");
       if (!mounted || !media.matches || !frame.matches(":hover")) return;
