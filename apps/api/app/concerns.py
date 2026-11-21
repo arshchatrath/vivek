@@ -11,6 +11,8 @@ from unicodedata import normalize
 import psycopg
 from pydantic import BaseModel, Field, field_validator
 
+from .embeddings import question_embedding
+
 
 SEED = Path(__file__).resolve().parents[3] / "data/seeds/concerns.json"
 log = logging.getLogger(__name__)
@@ -26,14 +28,22 @@ CARE_FIRST = re.compile(
     r"\b(pregnan\w*|breastfeed\w*|child|kid|baby|infant|teen\w*|minor|under 18|"
     r"(?:[1-9]|1[0-7])\s*(?:years?\s*old|yr\s*old)|"
     r"bleeding|blood in (?:my |the )?(?:stool|poo)|(?:cannot|can't) pass gas|vomiting|pus|fever|painful|pain|"
-    r"swollen|allergic|allergy|burning|patchy|sudden\w*|blisters?)\b"
+    r"swollen|allergic|allergy|burning|patchy|sudden\w*|blisters?|"
+    r"dosage|what dose|how much should i take|drug interactions?|"
+    r"can i (?:mix|combine)|can i take .+ together)\b"
     r"|बच्च[ाेी]|गर्भ|bacha|bachcha",
     re.I,
 )
-CLARIFY = (
-    "Describe what you notice, where it is, and how long it has been happening. "
-    "If several concerns match, choose one to explore first."
+CONTEXT_FOLLOWUP = re.compile(
+    r"(?:when should i (?:seek care|see (?:a doctor|a clinician|a dermatologist)|get (?:this|it) checked)"
+    r"|what (?:can|should) i (?:do|try)(?: about (?:it|this))?|why does (?:it|this) happen"
+    r"|how long (?:will|does) (?:it|this) last)[?.!]*",
 )
+URGENT_SPELLINGS = (
+    "chest pain", "can't breathe", "cannot breathe", "difficulty breathing", "trouble breathing",
+    "shortness of breath", "swollen tongue", "anaphylaxis", "seizures", "suicidal",
+)
+ENGLISH_WORDS = re.compile(r"[a-z]+(?:'[a-z]+)?")
 
 
 class ConcernRequest(BaseModel):
@@ -61,11 +71,85 @@ def covered_topics():
     return [{"id": guide["id"], "title": guide["title"]} for guide in guides().values()]
 
 
+def one_edit(observed: str, expected: str, allow_substitution: bool) -> bool:
+    if observed == expected or abs(len(observed) - len(expected)) > 1:
+        return False
+    if len(observed) > len(expected):
+        observed, expected = expected, observed
+    index = next((i for i, (a, b) in enumerate(zip(observed, expected)) if a != b), len(observed))
+    if len(observed) < len(expected):
+        return observed[index:] == expected[index + 1:]
+    if allow_substitution and observed[index + 1:] == expected[index + 1:]:
+        return True
+    return (observed[index:index + 2] == expected[index:index + 2][::-1]
+            and observed[index + 2:] == expected[index + 2:])
+
+
+def typo_near_alias(words: list[str], alias: str) -> bool:
+    expected = alias.split()
+    if not all(ENGLISH_WORDS.fullmatch(word) for word in expected):
+        return False
+    for start in range(len(words) - len(expected) + 1):
+        window = words[start:start + len(expected)]
+        differences = [(a, b) for a, b in zip(window, expected) if a != b]
+        if len(differences) == 1:
+            observed, original = differences[0]
+            if len(original) >= 4 and len(observed) >= 3 and one_edit(
+                observed, original, allow_substitution=len(original) >= 5 or len(expected) > 1,
+            ):
+                return True
+    return False
+
+
 def related_topics(question: str):
+    words = ENGLISH_WORDS.findall(question)
     return [
         guide["id"] for guide in guides().values()
-        if any(re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", question) for alias in guide["aliases"])
+        if any(
+            re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", question) or typo_near_alias(words, alias)
+            for alias in map(normalize_concern, guide["aliases"])
+        )
     ]
+
+
+def search_topics(question: str) -> tuple[str | None, list[str]]:
+    """Use the checked topic profiles for meaning and word overlap."""
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        return None, []
+    try:
+        vector = question_embedding(question)
+        with psycopg.connect(url, connect_timeout=3) as connection:
+            rows = connection.execute("""
+                WITH query AS (
+                    SELECT %s::vector AS embedding,
+                           tsvector_to_array(to_tsvector('english', %s)) AS words
+                )
+                SELECT topic, 1 - (concern_topics.embedding <=> query.embedding) AS similarity,
+                       cardinality(ARRAY(
+                           SELECT unnest(tsvector_to_array(search_vector))
+                           INTERSECT SELECT unnest(query.words)
+                       )) AS word_matches
+                FROM concern_topics CROSS JOIN query
+            """, (vector, question)).fetchall()
+    except Exception as exc:
+        log.warning("Concern topic lookup unavailable (%s)", type(exc).__name__)
+        return None, []
+
+    ranked = sorted(
+        ((similarity + 0.03 * min(words, 4), topic, similarity, words)
+         for topic, similarity, words in rows if topic in guides()),
+        reverse=True,
+    )
+    if not ranked:
+        return None, []
+    score, topic, similarity, words = ranked[0]
+    margin = score - ranked[1][0] if len(ranked) > 1 else score
+    # A clear lead and multiple matched words are required before opening a guide.
+    if similarity >= 0.43 and words >= 2 and score >= 0.54 and margin >= 0.08:
+        return topic, []
+    candidates = [topic for _, topic, similarity, words in ranked if similarity >= 0.38 and words >= 2]
+    return None, candidates[:3]
 
 
 def guidance_for(guide: dict, question: str) -> tuple[list[dict], str]:
@@ -118,23 +202,33 @@ def ingredient_options(guide: dict, products: list[dict]) -> list[dict]:
 
 def resolve_concern(request: ConcernRequest, load_products) -> dict:
     question = normalize_concern(request.concern)
-    if URGENT.search(question):
+    words = ENGLISH_WORDS.findall(question)
+    if URGENT.search(question) or any(typo_near_alias(words, alias) for alias in URGENT_SPELLINGS):
         return {"status": "urgent", "message": "These symptoms can need urgent help. Contact your local emergency service now."}
     matches = related_topics(question)
-    if request.topic and request.topic in guides() and (not matches or request.topic in matches):
-        guide = guides()[request.topic]
-    elif len(matches) == 1:
-        guide = guides()[matches[0]]
-    else:
-        options = [topic for topic in covered_topics() if not matches or topic["id"] in matches]
-        if CARE_FIRST.search(question):
-            return {"status": "care_first", "message": "Discuss this concern with a qualified clinician before choosing a product."}
-        if matches:
-            return {"status": "clarify", "message": CLARIFY, "topics": options}
-        return {"status": "outside_coverage", "message": "Vivek has no reviewed guidance for this description yet. If symptoms persist or concern you, contact a qualified clinician.", "topics": options}
-
-    cards, retrieval = guidance_for(guide, question)
+    context = request.topic if request.topic in guides() else None
     care_first = bool(CARE_FIRST.search(question))
+    selected = context if context and not request.share_followup and (not matches or context in matches) else None
+    if not selected and len(matches) == 1:
+        selected = matches[0]
+    if not selected and not matches and not care_first:
+        selected, matches = search_topics(question)
+        if not selected and context and request.share_followup and CONTEXT_FOLLOWUP.fullmatch(question):
+            selected = context
+    if not selected:
+        if care_first:
+            return {"status": "care_first", "message": "Discuss this concern with a qualified clinician before choosing a product."}
+        options = [topic for topic in covered_topics() if not matches or topic["id"] in matches]
+        if matches:
+            return {"status": "clarify", "message": "Which option best describes what you’re noticing?", "topics": options}
+        return {
+            "status": "outside_coverage",
+            "message": "Vivek couldn’t find a supported topic for that description. What changes have you noticed, and where?",
+            "topics": options,
+        }
+
+    guide = guides()[selected]
+    cards, retrieval = guidance_for(guide, question)
     message = "Speak with a qualified clinician before choosing a product." if care_first else None
     ingredients = []
     if not care_first and guide["ingredients"]:

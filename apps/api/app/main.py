@@ -26,6 +26,7 @@ import redis
 from dotenv import load_dotenv
 
 from .concerns import ConcernRequest, covered_topics, resolve_concern
+from .embeddings import question_embedding
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -39,7 +40,6 @@ PROVIDER_LIMITS = {
     "gnani": ("DAILY_SPEECH_CALL_LIMIT", "20"),
 }
 logger = logging.getLogger(__name__)
-_embedding_model = None
 
 
 def provider_call_allowed(provider: str) -> bool:
@@ -81,7 +81,7 @@ class CompareRequest(BaseModel):
 def catalog() -> dict:
     database_url = os.getenv("DATABASE_URL")
     if database_url:
-        with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        with psycopg.connect(database_url, row_factory=dict_row, connect_timeout=3) as connection:
             rows = connection.execute("""SELECT id,brand,region,name,description,sku,category,
                 image_url,price,currency,availability,ingredients,warnings,age_restrictions,
                 source_url,captured_at,review_status,field_sources FROM catalog_products
@@ -192,8 +192,9 @@ async def find_followup_passages(question: str, cards: list[dict]) -> list[str] 
 
 @app.post("/api/v1/concerns")
 async def concern(payload: ConcernRequest):
-    result = resolve_concern(payload, lambda: catalog()["products"])
-    if not payload.share_followup or not payload.topic or result["status"] != "guidance":
+    result = await run_in_threadpool(resolve_concern, payload, lambda: catalog()["products"])
+    if (not payload.share_followup or result["status"] != "guidance"
+            or payload.topic != result["topic"]["id"]):
         return result
     ids = await find_followup_passages(payload.concern, result["guidance"])
     if ids is None:
@@ -214,12 +215,7 @@ def relevant_products(question: str, chosen: list[str]) -> list[dict]:
     if chosen:
         return [item for item in items if item["id"] in chosen][:4]
     if os.getenv("DATABASE_URL"):
-        global _embedding_model
-        if _embedding_model is None:
-            from fastembed import TextEmbedding
-            _embedding_model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
-        vector = next(_embedding_model.query_embed(question))
-        vector_literal = "[" + ",".join(str(float(value)) for value in vector) + "]"
+        vector = question_embedding(question)
         with psycopg.connect(os.environ["DATABASE_URL"]) as connection:
             ranked = connection.execute("""WITH lexical AS (
                 SELECT d.source_url, row_number() over (ORDER BY
@@ -236,7 +232,7 @@ def relevant_products(question: str, chosen: list[str]) -> list[dict]:
                 SELECT source_url, 1.0/(60+rank) AS score FROM lexical
                 UNION ALL SELECT source_url, 1.0/(60+rank) AS score FROM semantic
             ) ranked GROUP BY source_url ORDER BY score DESC LIMIT 4""",
-                (question, question, question, vector_literal, vector_literal, vector_literal)).fetchall()
+                (question, question, question, vector, vector, vector)).fetchall()
         by_url = {item["source_url"]: item for item in items}
         return [by_url[row[0]] for row in ranked if row[0] in by_url]
     terms = [part for part in re.findall(r"[\w%]+", question.casefold()) if len(part) > 3]
@@ -254,7 +250,7 @@ def relevant_products(question: str, chosen: list[str]) -> list[dict]:
 async def chat(payload: ChatRequest, request: Request):
     if URGENT.search(payload.question):
         return {"answer": "This could need urgent medical attention. Please seek local emergency care or contact a qualified clinician now. Vivek cannot assess or treat an emergency.", "sources": [], "status": "safety_escalation", "provider": None}
-    matches = relevant_products(payload.question, payload.product_ids)
+    matches = await run_in_threadpool(relevant_products, payload.question, payload.product_ids)
     if not matches:
         return {"answer": "I could not find a matching product in the verified source catalog. Try a product name or brand. I cannot make a sourced product claim without a matching record.", "sources": [], "status": "knowledge_gap", "provider": None}
     sources = [{"id": item["id"], "title": item["name"], "url": item["source_url"], "captured_at": item["captured_at"], "publisher": item["brand"]} for item in matches]

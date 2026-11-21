@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -16,8 +17,18 @@ client = TestClient(app)
     ("I keep getting pimples and blackheads.", "acne"),
     ("My hair has been thinning over several months.", "hair-loss"),
     ("hairloss", "hair-loss"),
+    ("hairlos", "hair-loss"),
+    ("I have haiir loss", "hair-loss"),
     ("Hair  loss", "hair-loss"),
     ("hair‑loss", "hair-loss"),
+    ("I have dandruf", "scalp-flakes"),
+    ("dandurff", "scalp-flakes"),
+    ("acnee", "acne"),
+    ("constripation", "constipation"),
+    ("Mere baal gir rahe hain", "hair-loss"),
+    ("Mere baal nahate waqt nikalte hain", "hair-loss"),
+    ("Mera chehra dhone ke baad khinchta hai", "dry-skin"),
+    ("मेरे बाल गिर रहे हैं", "hair-loss"),
     ("My skin feels dry and tight after washing.", "dry-skin"),
     ("I have rough bumps on my arms.", "rough-bumps"),
     ("What should I look for in a sunscreen?", "sun-protection"),
@@ -43,6 +54,12 @@ def test_examples_retrieve_the_intended_sourced_guide(concern, topic):
     ("Constipation with blood in my stool", "care_first"),
     ("I have an unexplained tremor", "outside_coverage"),
     ("I have acne and hair loss", "clarify"),
+    ("I have acne and hairlos", "clarify"),
+    ("I get brown discoloration after pimples heal", "clarify"),
+    ("I have chset pain", "urgent"),
+    ("I can't brethe", "urgent"),
+    ("I have an ache", "outside_coverage"),
+    ("Can I combine two acne treatments?", "care_first"),
     ("My hairloss was sudden", "care_first"),
 ])
 def test_sensitive_or_unclear_cases_do_not_show_products(concern, expected):
@@ -60,3 +77,56 @@ def test_ingredient_matching_respects_form_and_source():
     result = client.post("/api/v1/concerns", json={"concern": "How do I prevent cavities?"}).json()
     assert result["ingredients"][0]["name"] == "Fluoride"
     assert result["ingredients"][0]["products"] == []
+
+
+def test_retrieved_topic_uses_saved_sources_without_groq(monkeypatch):
+    import app.main as api
+    import app.concerns as concerns
+
+    monkeypatch.setenv("DATABASE_URL", "")
+    monkeypatch.setattr(concerns, "search_topics", lambda _: ("hair-loss", []))
+
+    async def unexpected_groq_call(*_):
+        pytest.fail("A new concern should not use Groq follow-up quota")
+
+    monkeypatch.setattr(api, "find_followup_passages", unexpected_groq_call)
+    response = client.post("/api/v1/concerns", json={
+        "concern": "My brush is full of strands",
+        "topic": "acne",
+        "share_followup": True,
+    })
+    assert response.status_code == 200
+    assert response.json()["topic"]["id"] == "hair-loss"
+
+
+def test_uncertain_retrieval_asks_before_showing_guidance(monkeypatch):
+    import app.concerns as concerns
+
+    monkeypatch.setattr(concerns, "search_topics", lambda _: (None, ["dry-skin", "rough-bumps"]))
+    response = client.post("/api/v1/concerns", json={"concern": "My skin feels odd"})
+    result = response.json()
+    assert result["status"] == "clarify"
+    assert {choice["id"] for choice in result["topics"]} == {"dry-skin", "rough-bumps"}
+    assert not result.get("guidance") and not result.get("ingredients")
+
+
+@pytest.mark.parametrize(("question", "topic"), [
+    ("Every time I wash my hair, a lot comes out", "hair-loss"),
+    ("I can spend half the night in bed without getting any rest", "sleep"),
+    ("There is a ringing in my ears", None),
+])
+def test_hybrid_retrieval_with_seeded_postgres(question, topic):
+    from app.concerns import normalize_concern, related_topics
+
+    if not os.getenv("DATABASE_URL"):
+        pytest.skip("Seed the local PostgreSQL database to test vector retrieval")
+    assert not related_topics(normalize_concern(question))
+    result = client.post("/api/v1/concerns", json={"concern": question}).json()
+    if topic:
+        assert result["status"] == "guidance"
+        assert result["topic"]["id"] == topic
+        assert result["retrieval"] == "postgres_guidance"
+        assert result["guidance"]
+    else:
+        assert result["status"] == "outside_coverage"
+        assert not result.get("ingredients")

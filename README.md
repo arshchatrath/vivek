@@ -30,7 +30,7 @@ Vivek is for educational guidance. For diagnosis or treatment, speak with a qual
 
 ## How it works
 
-The Next.js catalog reads a checked-in snapshot. For concern questions, FastAPI checks for care signals and matches known phrases such as `hair loss` and `hairloss`. It ranks the saved passages for the matched topic with PostgreSQL full-text search. When a concern falls outside the library, Vivek offers the topics it covers.
+The Next.js catalog reads a checked-in snapshot. For concern questions, FastAPI checks for care signals, recognizes common misspellings, and looks for a known topic. For unfamiliar wording, it combines local MiniLM embeddings and PostgreSQL word matches across the 12 guides. A clear match returns saved passages with source links. Competing matches prompt a question before any product examples appear.
 
 ```mermaid
 flowchart LR
@@ -45,7 +45,7 @@ flowchart LR
     API --> Providers["Groq text · Gemini labels · Gnani voice"]
 ```
 
-Groq selects relevant excerpts from the saved topic for follow-ups. For product questions, the API retrieves listing facts with full-text search and pgvector embeddings, then Groq writes a cited answer. Gnani transcribes clips of up to 20 seconds. After you consent to label reading, the API strips photo metadata and sends the image to Gemini.
+Initial concern answers use zero Groq credits. Groq selects relevant excerpts for opt-in follow-ups within the same topic. For product questions, the API retrieves listing facts with full-text search and pgvector embeddings, then Groq writes a cited answer. Gnani transcribes clips of up to 20 seconds. After you consent to label reading, the API strips photo metadata and sends the image to Gemini.
 
 ## Run locally on Windows
 
@@ -59,7 +59,7 @@ python -m venv .venv
 npm ci --prefix apps/web
 ```
 
-Seed the local PostgreSQL database and start the API. The first indexing run downloads the MiniLM embedding model.
+Seed the local PostgreSQL database and start the API. The first indexing run downloads the MiniLM embedding model. The concern loader builds searchable topic profiles and the source passage index.
 
 ```powershell
 $env:DATABASE_URL = 'postgresql://wellwise:wellwise@127.0.0.1:5432/wellwise'

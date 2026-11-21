@@ -65,6 +65,13 @@ CREATE TABLE IF NOT EXISTS concern_passages (
 );
 CREATE INDEX IF NOT EXISTS idx_concern_search ON concern_passages USING gin(search_vector);
 
+CREATE TABLE IF NOT EXISTS concern_topics (
+  topic text PRIMARY KEY,
+  profile text NOT NULL,
+  embedding vector(384) NOT NULL,
+  search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', profile)) STORED
+);
+
 CREATE TABLE IF NOT EXISTS catalog_change_events (
   id bigserial PRIMARY KEY,
   product_id uuid NOT NULL,
