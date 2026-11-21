@@ -44,7 +44,7 @@
   },
   {
     "id": "hair-loss", "title": "Hair shedding and thinning", "reviewed_on": "2026-11-21",
-    "aliases": ["hair loss", "hair fall", "hairfall", "hair thinning", "thinning hair", "hair has been thinning", "hair is thinning", "hair shedding", "hair is falling", "losing hair", "receding hairline", "bald spot", "baal jhad", "बाल झड़"],
+    "aliases": ["hair loss", "hairloss", "hair fall", "hairfall", "hair thinning", "thinning hair", "hair has been thinning", "hair is thinning", "hair shedding", "hair is falling", "losing hair", "receding hairline", "bald spot", "baal jhad", "बाल झड़"],
     "sources": [
       {"title": "Hair loss diagnosis and treatment", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/hair-loss/treatment/diagnosis-treat"},
       {"title": "Tips for managing hair loss", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/hair-loss/treatment/tips"}

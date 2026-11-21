@@ -15,6 +15,9 @@ client = TestClient(app)
     ("My scalp is itchy and has white flakes.", "scalp-flakes"),
     ("I keep getting pimples and blackheads.", "acne"),
     ("My hair has been thinning over several months.", "hair-loss"),
+    ("hairloss", "hair-loss"),
+    ("Hair  loss", "hair-loss"),
+    ("hair‑loss", "hair-loss"),
     ("My skin feels dry and tight after washing.", "dry-skin"),
     ("I have rough bumps on my arms.", "rough-bumps"),
     ("What should I look for in a sunscreen?", "sun-protection"),
@@ -40,6 +43,7 @@ def test_examples_retrieve_the_intended_sourced_guide(concern, topic):
     ("Constipation with blood in my stool", "care_first"),
     ("I have an unexplained tremor", "outside_coverage"),
     ("I have acne and hair loss", "clarify"),
+    ("My hairloss was sudden", "care_first"),
 ])
 def test_sensitive_or_unclear_cases_do_not_show_products(concern, expected):
     result = client.post("/api/v1/concerns", json={"concern": concern}).json()

@@ -1,72 +1,127 @@
 # Vivek
 
-Vivek is a wellness guidance and product explorer for the Mosaic Fellowship. Type or dictate a concern to find published guidance, when to seek care, and product listings that name the relevant ingredient or product type. The catalog covers Man Matters, Be Bodywise, Little Joys, and Root Labs. Vivek also offers search, comparisons, product questions, and opt-in package-label reading.
+Vivek helps people turn a wellness question into guidance they can check. Ask in plain language, open the original health sources, and compare products whose brand listings name a relevant ingredient or product type. Built for the Mosaic Fellowship.
 
-## Repository layout
+[Live demo](https://vivek-fellowship.onrender.com) · [Open chat](https://vivek-fellowship.onrender.com/chat) · [Browse the catalog](https://vivek-fellowship.onrender.com/#catalog)
 
-| Path | Purpose |
-| --- | --- |
-| `apps/web` | Next.js static site, concern form, catalog, and comparison |
-| `apps/api` | FastAPI, retrieval, provider routes, and API tests |
-| `data/seeds` | Canonical catalog and guidance snapshots shared by the API and static build |
-| `services/ingestion` | Brand crawling, audit, and PostgreSQL indexing |
-| `infra/schema.sql` and `compose.yaml` | Local PostgreSQL, pgvector, and Redis |
+## Try it
 
-## What is populated
+1. Open [Vivek Chat](https://vivek-fellowship.onrender.com/chat). Type **“My scalp is itchy and has white flakes.”** or use the microphone and review the transcript.
+2. Send the question. Open a source link such as **NHS**, then see which ingredients or product types appear on the official listings.
+3. Ask **“When should I see a doctor about dandruff?”** in the same thread. The **ⓘ** icon next to **Ask with Groq** explains what the follow-up shares.
+4. In the [catalog](https://vivek-fellowship.onrender.com/#catalog), filter by brand and select two to four products to compare. Open any product to see its capture date and original listing. **Read a label** lets you upload a packaging photo and review the visible ingredients and warnings.
 
-- 323 unique official product listings, with original URLs, capture dates, names, images, displayed prices, and source provenance.
-- The catalog and comparison display rupees. The seven Root Labs listings from the US storefront use approximate rupee conversions from the 20 November 2026 FBIL reference rate. Listing details show the captured US price and link to the rate archive. Refresh the dated reference in `apps/web/src/app/vivek-app.tsx` when updating the conversion.
-- PostgreSQL product and source tables, full-text indexes, and 323 local pgvector embeddings.
-- Twelve concern guides and 30 source passages in a separate PostgreSQL retrieval index. Initial guidance is read locally. For an opt-in follow-up, Groq selects passages from the chosen topic and Vivek displays the stored guidance with its original links.
-- A full catalog audit scanned all 323 listing names, categories, descriptions, and captured product details. It found terms for 29 topic groups across 299 listings. These are leads for review. Ingredient matches require a checked brand listing and the expected ingredient or product form.
-- Crawl4AI Markdown page captures in `data/artifacts/` for review. This folder is ignored by Git; its text is not automatically treated as verified health evidence.
-- Ingredients, warnings, and age guidance remain unknown where an official listing has not been reviewed field by field.
+![Vivek Chat showing a sample question, sourced scalp guidance, and links to original publishers](docs/images/concern-chat.png)
 
-## Local setup on Windows
+## What the demo covers
 
-1. Install Python 3.13, Node 22+, and Docker Desktop. Start Docker Desktop.
-2. From this folder, run `docker compose up -d db redis`.
-3. Copy `.env.example` to `.env`. Keep `.env` local; it is ignored by Git. Set `DATABASE_URL` and `REDIS_URL` as shown for local Docker.
-4. Install backend dependencies: `python -m pip install -r apps/api/requirements.txt -r services/ingestion/requirements.txt`.
-5. Load the current source catalog and vector index:
+The catalog contains **323 official listings**. The concern library contains **12 topics** and **30 source passages**. Each catalog record stores its original URL, capture date, displayed price, and field-level source details.
 
-   ```powershell
-   $env:DATABASE_URL='postgresql://wellwise:wellwise@localhost:5432/wellwise'
-   python services/ingestion/load_postgres.py
-   python services/ingestion/index_knowledge.py
-   python services/ingestion/load_concern_guidance.py
-   ```
+| Brand | Listings |
+| --- | ---: |
+| Man Matters | 81 |
+| Be Bodywise | 104 |
+| Little Joys | 131 |
+| Root Labs | 7 |
 
-   The first vector-index run downloads a free local MiniLM model. No paid embedding service is needed.
+Catalog and comparison prices display in rupees. The seven US Root Labs listings use an estimate based on the 20 November 2026 FBIL reference rate. Product details show the captured USD price alongside the estimate.
 
-6. The API reads `.env` automatically. Run `python -m uvicorn app.main:app --app-dir apps/api --host 127.0.0.1 --port 8000`.
-7. In another PowerShell window, run `cd apps/web`, `npm install`, and `npm run dev`. Open `http://localhost:3000`.
+Vivek is for educational guidance. For diagnosis or treatment, speak with a qualified clinician. Product details link to the brand listing, and label reads show what was visible in the uploaded photo. Ingredients, warnings, and age guidance stay marked as unverified where field-level review is pending. Chat history clears on refresh.
 
-Product search and comparison work from the static catalog. The concern guide also accepts typed input with no model key. The API returns source cards when Groq is unavailable and an unavailable state for unconfigured label or voice input.
+## How it works
 
-## Free developer keys
+The Next.js catalog reads a checked-in snapshot. For concern questions, FastAPI checks for care signals and matches known phrases such as `hair loss` and `hairloss`. It ranks the saved passages for the matched topic with PostgreSQL full-text search. When a concern falls outside the library, Vivek offers the topics it covers.
 
-- Create a Groq API key and set `GROQ_API_KEY`. Vivek uses `openai/gpt-oss-20b` for text by default. Set `GROQ_TEXT_MODEL` only to choose another model. [Groq Console](https://console.groq.com/) · [Model list](https://console.groq.com/docs/models)
-- Create a Gemini API key and set `GEMINI_API_KEY`. Vivek uses `gemini-3.1-flash-lite` for label reading by default. Set `GEMINI_VISION_MODEL` only to choose another model. Set `ENABLE_IMAGE_ANALYSIS=true` to enable label reading. The upload endpoint sends cleaned images only after explicit user consent. [Google AI Studio](https://aistudio.google.com/app/apikey) · [Gemini pricing and data terms](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.1-flash-lite)
-- Set `GNANI_API_KEY` server-side for microphone input. The browser records up to 20 seconds on HTTPS or localhost and sends a WAV clip to the API. Gnani transcribes it in Indian English. The user can edit the text before submitting, and Vivek does not retain the recording. [Gnani REST transcription](https://docs.gnani.ai/api/STT/speech-to-text)
-- **Never** put keys in `NEXT_PUBLIC_*`, commit them, or send them in chat. Configure them as server-side secrets in the host dashboard when deploying.
-
-`REDIS_URL` enables daily provider caps. Defaults are 30 text calls, 3 label reads, and 20 short voice clips. Configure them with `DAILY_TEXT_CALL_LIMIT`, `DAILY_VISION_CALL_LIMIT`, and `DAILY_SPEECH_CALL_LIMIT`. The API pauses provider calls if Redis is unavailable.
-
-## Refreshing product information
-
-Run `scripts/refresh-catalog.ps1` from PowerShell with `DATABASE_URL` set. It checks robots rules, reads official product sitemaps and JSON-LD, stores source artifacts, updates PostgreSQL, rebuilds both retrieval indexes, scans for concern mentions, and exports a fresh frontend. Add `-IncludeMarkdown` to continue private Crawl4AI page captures. Review `data/artifacts/pending-changes.jsonl`, `data/artifacts/catalog-concern-audit.json`, and `catalog_change_events` after a refresh. Schedule the script with Windows Task Scheduler on a machine that can run Docker and reach the brand sites. A hosted scheduler can use the same commands with hosted database credentials.
-
-## Deployment shape
-
-`apps/web` builds a static export in `apps/web/out`, suitable for a free static host. `apps/api` needs a Python host plus PostgreSQL with pgvector and Redis. Set `NEXT_PUBLIC_API_URL` to the public API origin **before** building the web export, and set `API_CORS_ORIGIN` to the exact web origin. Use HTTPS and host-managed secrets. No hosted deployment is configured in this repository yet.
-
-## Checks
-
-```powershell
-python -m pytest apps/api/tests -q
-cd apps/web
-npm run build
+```mermaid
+flowchart LR
+    Brands["Official brand sites"] --> Ingest["Sitemaps, product metadata, and optional Crawl4AI capture"]
+    Ingest --> Catalog["Versioned catalog snapshot"]
+    Catalog --> Web["Next.js chat and catalog"]
+    Catalog --> DB["PostgreSQL + pgvector"]
+    Guidance["Sourced concern summaries"] --> DB
+    Web --> API["FastAPI"]
+    API --> DB
+    API --> Redis["Redis quotas"]
+    API --> Providers["Groq text · Gemini labels · Gnani voice"]
 ```
 
-See [the free deployment guide](docs/free-deployment.md) for exact account setup, [PROGRESS.md](PROGRESS.md) for delivery state and open decisions, and [WELLWISE_MASTER_BUILD_SPEC.md](WELLWISE_MASTER_BUILD_SPEC.md) for the full long-term vision.
+Groq selects relevant excerpts from the saved topic for follow-ups. For product questions, the API retrieves listing facts with full-text search and pgvector embeddings, then Groq writes a cited answer. Gnani transcribes clips of up to 20 seconds. After you consent to label reading, the API strips photo metadata and sends the image to Gemini.
+
+## Run locally on Windows
+
+Install **Python 3.13**, **Node.js 22 or later**, and **Docker Desktop**. Start Docker Desktop, then run the following from the repo root in PowerShell.
+
+```powershell
+docker compose up -d --wait db redis
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r apps/api/requirements.txt
+npm ci --prefix apps/web
+```
+
+Seed the local PostgreSQL database and start the API. The first indexing run downloads the MiniLM embedding model.
+
+```powershell
+$env:DATABASE_URL = 'postgresql://wellwise:wellwise@127.0.0.1:5432/wellwise'
+.\.venv\Scripts\python.exe services/ingestion/load_postgres.py
+.\.venv\Scripts\python.exe services/ingestion/index_knowledge.py
+.\.venv\Scripts\python.exe services/ingestion/load_concern_guidance.py
+.\.venv\Scripts\python.exe -m uvicorn app.main:app `
+  --app-dir apps/api --host 127.0.0.1 --port 8000
+```
+
+In a second PowerShell window at the repo root, start the frontend and open [localhost:3000](http://localhost:3000). The local [API health endpoint](http://localhost:8000/api/v1/health) should report `"catalog_products": 323`.
+
+```powershell
+npm run dev --prefix apps/web
+```
+
+### Add optional provider keys
+
+The catalog, comparisons, and typed concern guidance work without provider keys. Add the keys you need to the Git-ignored `.env` and restart the API. Use the host’s secret store in production and reserve `NEXT_PUBLIC_*` for browser-visible settings.
+
+| Feature | Server environment | Where to get access |
+| --- | --- | --- |
+| Product questions and follow-ups | `GROQ_API_KEY`. Defaults to `openai/gpt-oss-20b`. Override with `GROQ_TEXT_MODEL`. | [Groq Console](https://console.groq.com/) |
+| Package-label reading | `GEMINI_API_KEY` and `ENABLE_IMAGE_ANALYSIS=true`. Defaults to `gemini-3.1-flash-lite`. Override with `GEMINI_VISION_MODEL`. | [Gemini API key setup](https://ai.google.dev/gemini-api/docs/api-key) |
+| Microphone input | `GNANI_API_KEY`. Transcribes in Indian English on HTTPS or localhost. | [Gnani setup](https://docs.gnani.ai/api/STT/speech-to-text) |
+
+Redis enforces daily caps of **30 Groq calls**, **3 label reads**, and **20 voice clips** by default. Set the limits in [`.env.example`](.env.example). If Redis is unavailable, the API pauses provider calls and continues serving the catalog and stored guidance.
+
+## Refresh the catalog
+
+From PowerShell with your Python environment active, install the [ingestion dependencies](services/ingestion/requirements.txt) and point `DATABASE_URL` at your local development database. Run the [refresh script](scripts/refresh-catalog.ps1) to crawl brand sites, update the catalog and indexes, and build a new frontend export.
+
+```powershell
+python -m pip install -r services/ingestion/requirements.txt
+$env:DATABASE_URL = 'postgresql://wellwise:wellwise@127.0.0.1:5432/wellwise'
+.\scripts\refresh-catalog.ps1
+```
+
+Add `-IncludeMarkdown` to capture pages with Crawl4AI. Review the private reports in `data/artifacts/` and the `catalog_change_events` table before publishing updates. The live preview uses manual refreshes.
+
+## Test and deploy
+
+Run the API tests, lint the web app, and build the static site from the repo root.
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest apps/api/tests -q
+npm run lint --prefix apps/web
+npm run build --prefix apps/web
+```
+
+Render serves the static export from `apps/web/out` and runs FastAPI separately. Set `NEXT_PUBLIC_API_URL` before building the frontend. Set `API_CORS_ORIGIN` to the exact frontend origin on the API.
+
+The preview uses Render’s free tier. The API can take about a minute to wake after inactivity. The current database expires **21 December 2026 at 18:25 IST**. See the [deployment guide](docs/free-deployment.md) and [Render’s free-tier limits](https://render.com/docs/free).
+
+## Find the code
+
+| Path | What to find there |
+| --- | --- |
+| [`apps/web`](apps/web) | Chat, catalog, comparison, and label reader |
+| [`apps/api`](apps/api) | FastAPI routes, retrieval, provider integrations, and tests |
+| [`data/seeds`](data/seeds) | Catalog and concern snapshots |
+| [`services/ingestion`](services/ingestion) | Brand crawlers, catalog audit, and index loaders |
+| [`infra/schema.sql`](infra/schema.sql) and [`compose.yaml`](compose.yaml) | Database schema and local services |
+
+[Progress and open work](PROGRESS.md) · [Full WellWise specification](WELLWISE_MASTER_BUILD_SPEC.md)

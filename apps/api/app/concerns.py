@@ -53,7 +53,8 @@ def guides() -> dict:
 
 
 def normalize_concern(value: str) -> str:
-    return normalize("NFKC", value).casefold().replace("’", "'").translate(str.maketrans("-‐‑", "   "))
+    text = normalize("NFKC", value).casefold().replace("’", "'").translate(str.maketrans("-‐‑", "   "))
+    return " ".join(text.split())
 
 
 def covered_topics():
