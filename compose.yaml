@@ -1,0 +1,27 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: wellwise
+      POSTGRES_USER: wellwise
+      POSTGRES_PASSWORD: wellwise
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - vivek_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellwise -d wellwise"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - vivek_redisdata:/data
+
+volumes:
+  vivek_pgdata:
+  vivek_redisdata:
+

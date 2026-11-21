@@ -1,0 +1,220 @@
+"use client";
+
+import { useRef, useState, type FormEvent } from "react";
+import ConcernDictation from "./concern-dictation";
+
+type Topic = { id: string; title: string };
+type Source = { title: string; publisher: string; url: string };
+type Passage = { id: string; title: string; text: string; source: Source };
+type Listing = { id: string; brand: string; name: string; source_url: string; availability: string | null };
+type Ingredient = { name: string; form: string; evidence: Source; products: Listing[] };
+type Result = {
+  status: "guidance" | "care_first" | "urgent" | "clarify" | "outside_coverage";
+  message?: string;
+  topic?: Topic;
+  topics?: Topic[];
+  guidance?: Passage[];
+  followup?: Passage[];
+  ingredients?: Ingredient[];
+};
+
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const concernLimit = 1000;
+
+const examples = [
+  ["Scalp flakes", "My scalp is itchy and has white flakes."],
+  ["Acne", "I keep getting pimples and blackheads."],
+  ["Hair thinning", "My hair has been thinning over several months."],
+  ["Dry skin", "My skin feels dry and tight after washing."],
+  ["Rough bumps", "I have rough bumps on my arms."],
+  ["Sun protection", "What should I look for in a sunscreen?"],
+  ["Dry hair", "My hair feels dry and frizzy."],
+  ["Body odor", "What can help with body odor?"],
+  ["Sleep", "I've been having trouble sleeping."],
+  ["Cavity prevention", "What should I look for in toothpaste to prevent cavities?"],
+  ["Dark spots", "I notice dark spots on my face."],
+  ["Constipation", "I have been constipated lately."],
+];
+
+async function fetchConcern(concern: string, topic?: string, shareFollowup = false): Promise<Result> {
+  const response = await fetch(`${API}/api/v1/concerns`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ concern, topic, share_followup: shareFollowup }),
+  });
+  if (!response.ok) throw new Error("Guidance request failed");
+  return response.json();
+}
+
+function Examples({ pending, select }: { pending: boolean; select: (example: string) => void }) {
+  const renderExample = ([label, text]: string[]) => (
+    <button key={label} type="button" disabled={pending} onClick={() => select(text)}>{label}</button>
+  );
+  return <details className="example-list">
+    <summary>Try an example</summary>
+    <div className="concern-examples">{examples.map(renderExample)}</div>
+  </details>;
+}
+
+function EvidenceCards({ cards }: { cards: Passage[] }) {
+  return <div className="concern-cards">
+    {cards.map((card) => <article className="evidence-card" key={card.id}>
+      <h4>{card.title}</h4>
+      <p>{card.text}</p>
+      <a href={card.source.url} target="_blank" rel="noopener noreferrer">{card.source.publisher} ↗</a>
+    </article>)}
+  </div>;
+}
+
+function Ingredients({ ingredients }: { ingredients: Ingredient[] }) {
+  return <div className="concern-ingredients">
+    <h3>Ingredients and product examples</h3>
+    <p>These examples match a detail named on the brand’s listing. Check the current package for ingredients and warnings.</p>
+    <div className="concern-cards">
+      {ingredients.map((ingredient) => <article className="evidence-card" key={ingredient.name}>
+        <h4>{ingredient.name}</h4>
+        <p>{ingredient.form}</p>
+        <a href={ingredient.evidence.url} target="_blank" rel="noopener noreferrer">{ingredient.evidence.title} ↗</a>
+        {ingredient.products.length ? <ul>
+          {ingredient.products.map((product) => <li key={product.id}>
+            <a href={product.source_url} target="_blank" rel="noopener noreferrer">{product.name} ↗</a>
+            <small>{product.brand}{product.availability === "OutOfStock" ? " · Out of stock at capture" : ""}</small>
+          </li>)}
+        </ul> : <p className="concern-no-match">No checked match in the current catalog.</p>}
+      </article>)}
+    </div>
+  </div>;
+}
+
+function ConcernResult({ result, chooseTopic }: { result: Result; chooseTopic: (topic: string) => void }) {
+  return <>
+    <h3>{result.status === "urgent" ? "Seek urgent help" : result.topic?.title || "Find relevant guidance"}</h3>
+    {result.message && <p className="concern-message">{result.message}</p>}
+    {result.topics && <div className="concern-examples">
+      {result.topics.map((topic) => <button type="button" key={topic.id} onClick={() => chooseTopic(topic.id)}>{topic.title}</button>)}
+    </div>}
+    {result.followup?.length ? <div className="concern-followup">
+      <h3>Relevant passages for your question</h3><EvidenceCards cards={result.followup} />
+    </div> : null}
+    {result.guidance?.length ? <EvidenceCards cards={result.guidance} /> : null}
+    {result.ingredients?.length ? <Ingredients ingredients={result.ingredients} /> : null}
+  </>;
+}
+
+function useConcernGuide() {
+  const [concern, setConcern] = useState("");
+  const [result, setResult] = useState<Result | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [followup, setFollowup] = useState<Topic | null>(null);
+  const [consent, setConsent] = useState(false);
+  const field = useRef<HTMLTextAreaElement>(null);
+  const output = useRef<HTMLDivElement>(null);
+
+  async function requestGuidance(topic?: string, share = false) {
+    if (pending) return;
+    if (concern.trim().length < 3) {
+      setError("Enter a few words about what you’re experiencing.");
+      field.current?.focus();
+      return;
+    }
+    setPending(true);
+    setError("");
+    setResult(null);
+    try {
+      setResult(await fetchConcern(concern, topic, share));
+      requestAnimationFrame(() => output.current?.focus());
+    } catch {
+      setError("Vivek couldn’t load guidance. Try again in a moment.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function selectExample(example: string) {
+    setFollowup(null);
+    setConsent(false);
+    setConcern(example);
+    setResult(null);
+    setError("");
+    field.current?.focus();
+  }
+
+  function askFollowup(topic: Topic) {
+    setFollowup(topic);
+    setConsent(false);
+    setConcern("");
+    field.current?.focus();
+  }
+
+  return { concern, setConcern, result, pending, error, followup, consent, setConsent,
+    field, output, selectExample, askFollowup, requestGuidance };
+}
+
+function ConcernForm({ guide }: { guide: ReturnType<typeof useConcernGuide> }) {
+  const { concern, setConcern, pending, error, followup, consent, setConsent, field, selectExample, requestGuidance } = guide;
+  const [inputLabel, placeholder, submitLabel] = followup
+    ? [`Follow-up about ${followup.title.toLowerCase()}`, "For example: When should I get it checked?", "Find an answer"]
+    : ["What are you experiencing?", "For example: My scalp is itchy and has white flakes.", "Find guidance"];
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void requestGuidance(followup?.id, consent);
+  }
+
+  return <form className="concern-form app-frame" onSubmit={submit} aria-busy={pending}>
+    <label htmlFor="concern-input">{inputLabel}</label>
+    <textarea ref={field} id="concern-input" value={concern} onChange={(event) => setConcern(event.target.value)}
+      rows={3} maxLength={concernLimit} required placeholder={placeholder} aria-describedby="concern-input-help" />
+    <div className="concern-field-tools">
+      <small id="concern-input-help">Include how long it’s lasted. Leave out names and contact details.
+        <span id="concern-mic-help">Voice clips go to Gnani for transcription.</span>
+      </small>
+      <ConcernDictation disabled={pending} onTranscript={(text) => {
+        setConcern((previous) => `${previous.trimEnd()} ${text}`.trimStart().slice(0, concernLimit));
+      }} />
+    </div>
+    {followup && <label className="concern-consent">
+      <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
+      Send this follow-up and the selected source passages to Groq to find relevant guidance.
+    </label>}
+    <div className="concern-form-actions">
+      <button className="primary-action" type="submit" disabled={pending || Boolean(followup && !consent)}>
+        {pending ? "Finding guidance…" : submitLabel}<span aria-hidden="true">↗</span>
+      </button>
+      {followup && <button className="concern-reset" type="button" disabled={pending} onClick={() => selectExample("")}>Start a new concern</button>}
+    </div>
+    {!followup && <Examples pending={pending} select={selectExample} />}
+    {error && <p role="alert">{error}</p>}
+  </form>;
+}
+
+export default function ConcernGuide({ catalogSize }: { catalogSize: number }) {
+  const guide = useConcernGuide();
+  const { result, output, askFollowup, requestGuidance } = guide;
+  const followupTopic = result?.status === "guidance" ? result.topic : undefined;
+  return <>
+    <section id="concern" className="hero concern-section" data-enter aria-labelledby="concern-title">
+      <div className="wrap">
+        <div className="hero-text concern-layout">
+          <div className="concern-intro">
+            <h1 id="concern-title">Guidance for <em>your concern.</em></h1>
+            <p className="hero__lead">Read guidance from health organizations, check the original sources, and find products that list relevant ingredients.</p>
+            <div className="guide-scope">
+              <span><strong>{examples.length}</strong> health guides</span>
+              <a href="#catalog"><strong>{catalogSize}</strong> product listings <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <ConcernForm guide={guide} />
+        </div>
+      </div>
+    </section>
+    <section id="guidance" aria-label="Concern results" hidden={!result}>
+      <div className="wrap">
+        <div className={result ? `concern-output ${result.status}` : undefined} tabIndex={-1} ref={output} aria-live="polite">
+          {result && <ConcernResult result={result} chooseTopic={(topic) => void requestGuidance(topic)} />}
+          {followupTopic && <button className="concern-reset" type="button" onClick={() => askFollowup(followupTopic)}>Ask a follow-up ↗</button>}
+        </div>
+      </div>
+    </section>
+  </>;
+}

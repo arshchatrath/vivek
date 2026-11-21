@@ -1,0 +1,200 @@
+[
+  {
+    "id": "scalp-flakes", "title": "Scalp flaking and dandruff", "reviewed_on": "2026-11-21",
+    "aliases": ["dandruff", "scalp flakes", "flakes on my scalp", "flakes on scalp", "flaking scalp", "flaky scalp", "itchy scalp", "scalp itch", "scalp is itchy", "scalp is flaking", "scalp has flakes", "white flakes", "rusi", "roosi", "रूसी"],
+    "sources": [
+      {"title": "How to treat dandruff", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/hair-scalp-care/scalp/treat-dandruff"},
+      {"title": "Dandruff", "publisher": "NHS", "url": "https://www.nhs.uk/conditions/dandruff/"}
+    ],
+    "guidance": [
+      {"id": "cause", "title": "What scalp flakes can mean", "text": "An itchy, flaking scalp can occur with dandruff, but irritation and other skin conditions can look similar. The description alone cannot establish the cause.", "source": 1},
+      {"id": "self-care", "title": "What you can try", "text": "Regular washing may help mild dandruff. If it persists, dermatology guidance lists anti-dandruff shampoos with ingredients such as ketoconazole or salicylic acid. Follow the instructions on the package.", "source": 0},
+      {"id": "care", "title": "When to get checked", "text": "Ask a clinician if the scalp is very itchy, red or swollen, if flakes occur on other parts of the body, or if symptoms persist after about a month of anti-dandruff shampoo use.", "source": 1}
+    ],
+    "ingredients": [
+      {"name": "Ketoconazole", "form": "Anti-dandruff shampoo", "source": 0, "matches": [
+        {"url": "https://bebodywise.com/product/1-ketoconazole-dandruff-shampoo-150ml", "terms": ["ketoconazole", "shampoo"]},
+        {"url": "https://manmatters.com/dp/p-keto-power-shampoo/3526736", "terms": ["ketoconazole", "shampoo"]}
+      ]},
+      {"name": "Salicylic acid", "form": "Anti-dandruff shampoo", "source": 0, "matches": [
+        {"url": "https://manmatters.com/dp/advance-ads/2025050", "terms": ["salicylic acid", "shampoo"]}
+      ]}
+    ]
+  },
+  {
+    "id": "acne", "title": "Acne and clogged pores", "reviewed_on": "2026-11-21",
+    "aliases": ["acne", "pimples", "pimple", "breakouts", "breakout", "blackheads", "whiteheads", "clogged pores", "muhase", "मुंहासे"],
+    "sources": [
+      {"title": "Adult acne treatment dermatologists recommend", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/acne/diy/adult-acne-treatment"},
+      {"title": "Acne clinical guideline", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/member/clinical-quality/guidelines/acne"},
+      {"title": "Tips for managing acne", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/acne/skin-care/tips"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "Start with gentle skin care", "text": "Wash gently and avoid scrubbing or picking at breakouts. Harsh exfoliation can irritate skin. Choose a product meant for the area you are washing.", "source": 2},
+      {"id": "ingredients", "title": "Ingredients discussed in acne guidance", "text": "Salicylic acid is an option for clogged pores such as whiteheads and blackheads. The acne guideline also discusses benzoyl peroxide. The right option depends on the kind of acne and how your skin responds.", "source": 1},
+      {"id": "care", "title": "When to see a dermatologist", "text": "Deep, painful spots or acne that is leaving scars are reasons to seek dermatology care.", "source": 0}
+    ],
+    "ingredients": [
+      {"name": "Salicylic acid", "form": "Face wash", "source": 1, "matches": [
+        {"url": "https://bebodywise.com/product/salicylic-acid-face-wash", "terms": ["salicylic acid", "face wash"]},
+        {"url": "https://bebodywise.com/product/2-salicylic-acid-face-wash", "terms": ["salicylic acid", "face wash"]}
+      ]},
+      {"name": "Benzoyl peroxide", "form": "Topical acne products", "source": 1, "matches": []}
+    ]
+  },
+  {
+    "id": "hair-loss", "title": "Hair shedding and thinning", "reviewed_on": "2026-11-21",
+    "aliases": ["hair loss", "hair fall", "hairfall", "hair thinning", "thinning hair", "hair has been thinning", "hair is thinning", "hair shedding", "hair is falling", "losing hair", "receding hairline", "bald spot", "baal jhad", "बाल झड़"],
+    "sources": [
+      {"title": "Hair loss diagnosis and treatment", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/hair-loss/treatment/diagnosis-treat"},
+      {"title": "Tips for managing hair loss", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/hair-loss/treatment/tips"}
+    ],
+    "guidance": [
+      {"id": "cause", "title": "The cause determines the options", "text": "Hair shedding and thinning can have different causes. A clinician may ask about the pattern, timing, illness, medicines and family history, then examine the scalp and decide whether tests are needed.", "source": 0},
+      {"id": "self-care", "title": "What you can do while getting assessed", "text": "Handle your hair gently and avoid hairstyles that pull tightly. Book a dermatology appointment to evaluate ongoing or unexplained hair loss.", "source": 1},
+      {"id": "ingredient", "title": "An ingredient to discuss with a clinician", "text": "Topical minoxidil can help some people with early hair loss. Whether it is appropriate depends on the cause and your circumstances, so discuss it with a clinician before choosing a product.", "source": 0}
+    ],
+    "ingredients": [
+      {"name": "Minoxidil", "form": "Topical scalp solution for discussion with a clinician", "source": 0, "matches": [
+        {"url": "https://manmatters.com/dp/1613", "terms": ["minoxidil", "solution"]}
+      ]}
+    ]
+  },
+  {
+    "id": "dry-skin", "title": "Dry and tight skin", "reviewed_on": "2026-11-21",
+    "aliases": ["dry skin", "skin is dry", "skin feels dry", "tight skin", "skin feels tight", "dry hands", "dry face", "dry patches", "sukhi skin", "रूखी त्वचा"],
+    "sources": [
+      {"title": "Dermatologists' tips for relieving dry skin", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/dermatologists-tips-relieve-dry-skin"},
+      {"title": "How to pick the right moisturizer", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/pick-moisturizer"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "Moisturize after washing", "text": "For ordinary dryness, take short, lukewarm showers and apply a fragrance-free cream or ointment while the skin is still damp.", "source": 0},
+      {"id": "ingredient", "title": "What to look for on the label", "text": "Ceramides are one option in moisturizers that help the skin hold water. The rest of the formula matters, including its texture and whether it contains fragrance.", "source": 1},
+      {"id": "care", "title": "When to seek care", "text": "See a dermatologist if dryness continues despite skin care changes or creams routinely sting or burn. Very dry skin can also accompany other skin conditions.", "source": 0}
+    ],
+    "ingredients": [
+      {"name": "Ceramides", "form": "Moisturizer. Check the full label for fragrance and other ingredients", "source": 1, "matches": [
+        {"url": "https://bebodywise.com/product/1-peptide-ceramide-moisturizer", "terms": ["ceramide", "moisturizer"]}
+      ]}
+    ]
+  },
+  {
+    "id": "rough-bumps", "title": "Rough bumps on arms or legs", "reviewed_on": "2026-11-21",
+    "aliases": ["rough bumps", "bumpy skin", "bumps on my arms", "bumps on my legs", "keratosis pilaris", "strawberry legs", "strawberry skin", "chicken skin"],
+    "sources": [
+      {"title": "Keratosis pilaris diagnosis and treatment", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/a-z/keratosis-pilaris-treatment"}
+    ],
+    "guidance": [
+      {"id": "cause", "title": "Rough bumps have several possible causes", "text": "A dermatologist can examine the bumps to confirm whether they are keratosis pilaris. Bumps on the arms or legs can have other causes, and similar-looking bumps may need different care.", "source": 0},
+      {"id": "self-care", "title": "What guidance discusses for confirmed keratosis pilaris", "text": "Moisturizing can help dryness. Dermatology guidance lists urea and lactic acid among ingredients that can improve rough texture. Exfoliating products can also irritate skin.", "source": 0}
+    ],
+    "ingredients": [
+      {"name": "Urea", "form": "Body lotion", "source": 0, "matches": [{"url": "https://bebodywise.com/product/10-urea-lotion", "terms": ["urea", "lotion"]}]},
+      {"name": "Lactic acid", "form": "Body lotion", "source": 0, "matches": [{"url": "https://bebodywise.com/product/5-lactic-acid-body-lotion", "terms": ["lactic acid", "lotion"]}]}
+    ]
+  },
+  {
+    "id": "sun-protection", "title": "Sun protection", "reviewed_on": "2026-11-21",
+    "aliases": ["sunscreen", "sun protection", "sun exposure", "prevent sunburn", "spf", "uv protection"],
+    "sources": [
+      {"title": "How to select a sunscreen", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/sun-protection/shade-clothing-sunscreen/how-to-select-sunscreen"},
+      {"title": "Practice safe sun", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/sun-protection/shade-clothing-sunscreen/practice-safe-sun"}
+    ],
+    "guidance": [
+      {"id": "label", "title": "Three things to check on sunscreen labels", "text": "Look for SPF 30 or higher, broad-spectrum UVA and UVB protection, and water resistance. Check the complete package for all three.", "source": 0},
+      {"id": "self-care", "title": "Use more than one form of protection", "text": "Use shade and protective clothing alongside sunscreen. When outdoors, reapply sunscreen about every two hours and after swimming or sweating, following the product directions.", "source": 1}
+    ],
+    "ingredients": [
+      {"name": "Broad-spectrum sunscreen", "form": "SPF label example. Confirm water resistance on the current package", "source": 0, "matches": [
+        {"url": "https://bebodywise.com/product/ultra-light-sunscreen-spf50", "terms": ["sunscreen", "spf"]}
+      ]}
+    ]
+  },
+  {
+    "id": "dry-hair", "title": "Dry, frizzy or damaged hair", "reviewed_on": "2026-11-21",
+    "aliases": ["dry hair", "frizzy hair", "frizz", "split ends", "hair breakage", "damaged hair", "hair feels dry", "hair is dry"],
+    "sources": [
+      {"title": "Tips for healthy hair", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/hair-scalp-care/hair/healthy-hair-tips"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "Condition after washing", "text": "Apply shampoo mainly to the scalp. Conditioner helps moisturize and detangle the hair. For dry or curly hair, the AAD suggests using conditioner along its length.", "source": 0},
+      {"id": "heat", "title": "Reduce heat and friction", "text": "Limit high heat from dryers, straighteners and curling irons. Blot wet hair gently rather than rubbing it with a towel.", "source": 0}
+    ],
+    "ingredients": [
+      {"name": "Hair conditioner", "form": "Rinse-out hair care. Check the package for the full formula", "source": 0, "matches": [
+        {"url": "https://bebodywise.com/product/deep-moisturizing-conditioner", "terms": ["conditioner"]}
+      ]}
+    ]
+  },
+  {
+    "id": "body-odor", "title": "Body odor and sweating", "reviewed_on": "2026-11-21",
+    "aliases": ["body odor", "body odour", "smelly armpits", "underarm odor", "underarm odour", "sweating too much", "excessive sweating", "sweaty armpits"],
+    "sources": [
+      {"title": "Body odour", "publisher": "NHS", "url": "https://www.nhs.uk/symptoms/body-odour-bo/"},
+      {"title": "Excessive sweating", "publisher": "NHS", "url": "https://www.nhs.uk/conditions/excessive-sweating-hyperhidrosis/"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "What you can try for ordinary body odor", "text": "Wash and dry the areas that tend to sweat, and change clothes regularly. A deodorant can help with odor. If the main concern is how much you sweat, a pharmacist can advise on antiperspirants.", "source": 0},
+      {"id": "care", "title": "When to get checked", "text": "Ask a clinician about a sudden change in how much you sweat or how you smell, sweating at night, or sweating that affects daily activities.", "source": 1}
+    ],
+    "ingredients": [
+      {"name": "Deodorant", "form": "Roll-on for odor. Check the label for antiperspirant status", "source": 0, "matches": [
+        {"url": "https://manmatters.com/dp/underarm-roll-on-deo/26166999", "terms": ["underarm", "deo"]}
+      ]}
+    ]
+  },
+  {
+    "id": "sleep", "title": "Trouble sleeping", "reviewed_on": "2026-11-21",
+    "aliases": ["insomnia", "trouble sleeping", "sleep problems", "can't sleep", "cannot sleep", "poor sleep", "fall asleep", "stay asleep", "waking up at night", "neend nahi"],
+    "sources": [
+      {"title": "Insomnia", "publisher": "NHS", "url": "https://www.nhs.uk/conditions/insomnia/"},
+      {"title": "Sleep disorders and complementary health approaches", "publisher": "NIH National Center for Complementary and Integrative Health", "url": "https://www.nccih.nih.gov/health/sleep-disorders-and-complementary-health-approaches"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "Start with a consistent sleep routine", "text": "Keep a regular wake time, wind down before bed, and limit evening caffeine. A dark and quiet room can make it easier to sleep.", "source": 0},
+      {"id": "care", "title": "When to seek care", "text": "Speak with a clinician if poor sleep has lasted for months, sleep habits have not helped, or the problem makes daily life hard. A clinician can discuss options such as cognitive behavioral therapy for insomnia.", "source": 0},
+      {"id": "evidence", "title": "What the supplement evidence can tell you", "text": "Evidence for many sleep supplements is limited or inconsistent. Discuss any supplement with a clinician, especially if you take medicines. The current guide has no checked product match for treating insomnia.", "source": 1}
+    ],
+    "ingredients": []
+  },
+  {
+    "id": "cavity-prevention", "title": "Cavity prevention and toothpaste", "reviewed_on": "2026-11-21",
+    "aliases": ["prevent cavities", "cavity prevention", "prevent tooth decay", "fluoride toothpaste", "fluoride free toothpaste", "toothpaste for cavities"],
+    "sources": [
+      {"title": "Home oral care", "publisher": "American Dental Association", "url": "https://www.ada.org/resources/ada-library/oral-health-topics/home-care"},
+      {"title": "Toothpastes", "publisher": "American Dental Association", "url": "https://www.ada.org/resources/ada-library/oral-health-topics/toothpastes/"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "Daily care that helps prevent cavities", "text": "Dental guidance recommends brushing with fluoride toothpaste and cleaning between teeth regularly. A dentist can tailor prevention advice to your risk of decay.", "source": 0},
+      {"id": "ingredient", "title": "Why fluoride matters", "text": "Fluoride helps strengthen enamel and lower the risk of tooth decay. Check the ingredient label for fluoride before choosing a toothpaste for cavity prevention.", "source": 1}
+    ],
+    "ingredients": [{"name": "Fluoride", "form": "Toothpaste", "source": 1, "matches": []}]
+  },
+  {
+    "id": "dark-spots", "title": "Dark spots and uneven skin tone", "reviewed_on": "2026-11-21",
+    "aliases": ["dark spots", "dark patches", "hyperpigmentation", "uneven skin tone", "brown marks", "acne marks", "melasma"],
+    "sources": [
+      {"title": "How to fade dark spots in darker skin tones", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/everyday-care/skin-care-secrets/routine/fade-dark-spots"},
+      {"title": "Finding skin cancer in darker skin tones", "publisher": "American Academy of Dermatology", "url": "https://www.aad.org/public/diseases/skin-cancer/darker-skin-tones"}
+    ],
+    "guidance": [
+      {"id": "cause", "title": "Look at what preceded the mark", "text": "Dark marks can remain after a breakout or irritation heals. Finding and addressing the underlying cause helps guide what to do next.", "source": 0},
+      {"id": "self-care", "title": "Protect skin from sun and visible light", "text": "For dark spots in darker skin tones, dermatology guidance discusses tinted, broad-spectrum sunscreen with iron oxide, SPF 30 or higher, and water resistance.", "source": 0},
+      {"id": "care", "title": "Have new or changing spots checked", "text": "A new, changing, bleeding or otherwise unusual spot should be assessed by a dermatologist before using products to fade it.", "source": 1}
+    ],
+    "ingredients": [{"name": "Iron oxide", "form": "Tinted sunscreen. Check for broad-spectrum protection and water resistance", "source": 0, "matches": []}]
+  },
+  {
+    "id": "constipation", "title": "Constipation and hard stools", "reviewed_on": "2026-11-21",
+    "aliases": ["constipation", "constipated", "hard stools", "hard stool", "straining to poop", "kabz", "कब्ज"],
+    "sources": [
+      {"title": "Eating, diet and nutrition for constipation", "publisher": "NIH National Institute of Diabetes and Digestive and Kidney Diseases", "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/constipation/eating-diet-nutrition"},
+      {"title": "Symptoms and causes of constipation", "publisher": "NIH National Institute of Diabetes and Digestive and Kidney Diseases", "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/constipation/symptoms-causes"}
+    ],
+    "guidance": [
+      {"id": "self-care", "title": "Start with food and fluids", "text": "For uncomplicated constipation, guidance recommends eating fiber-rich foods, increasing fiber gradually, and drinking enough fluids to help fiber work. Whole grains, pulses, and fruit are common sources.", "source": 0},
+      {"id": "care", "title": "When to get medical care", "text": "Seek medical advice if constipation persists despite self-care. Get prompt care if you also have rectal bleeding, blood in your stool, ongoing abdominal pain, vomiting, or inability to pass gas.", "source": 1}
+    ],
+    "ingredients": []
+  }
+]

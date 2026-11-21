@@ -1,0 +1,312 @@
+:root {
+  --canvas: #f8f7ef;
+  --ink-v: #242f23;
+  --quiet: #424e3e;
+  --rule: #d5dacc;
+  --sage: #e7eddf;
+  --paper: #fffef9;
+  --moss: #2e4834;
+  --moss-hover: #213929;
+  --nav-height: 72px;
+  --nav: var(--nav-height);
+  --serif: "Instrument Serif", Georgia, serif;
+  --p-bg: var(--canvas);
+  --p-surface: var(--paper);
+  --p-ink: var(--ink-v);
+  --p-muted: var(--quiet);
+  --p-accent: var(--moss);
+  --p-accent-ink: #fff;
+  --p-action: var(--moss);
+  --p-action-ink: #fff;
+  --font-display: var(--serif);
+  --font-text: "Manrope", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+body { margin: 0; color: var(--ink-v); background: var(--canvas); font-family: var(--font-text); }
+
+.opening-screen { display: none; }
+.vivek-opening:has(.opening-screen) { overflow: hidden; scrollbar-gutter: stable; }
+.vivek-opening .opening-screen, .opening-screen[open] {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; box-sizing: border-box;
+  width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 28px 20px; border: 0;
+  background: radial-gradient(ellipse at 50% 35%, #36553f 0%, #24392d 68%); color: var(--paper);
+}
+.opening-screen::backdrop { background: #24392d; }
+.opening-content { width: min(100%, 320px); text-align: center; }
+.opening-brand { display: flex; justify-content: center; align-items: center; gap: 12px; font: 400 78px/.95 var(--serif); letter-spacing: -.055em; }
+.opening-brand span {
+  display: grid; place-items: center; width: 46px; aspect-ratio: 1; border-radius: 50%;
+  background: #d9e4c8; color: #24392d; font: 27px/1 var(--font-text); letter-spacing: normal;
+}
+.opening-content p { margin: 23px 0 28px; font-size: 15px; color: #e4ebdc; }
+.opening-progress { height: 3px; margin-inline: auto; width: min(100%, 200px); border-radius: 4px; background: #ffffff35; }
+.opening-progress::before {
+  content: ""; display: block; height: 100%; border-radius: inherit; background: #d9e4c8;
+  transform-origin: left; animation: opening-progress 3.2s linear both;
+}
+@keyframes opening-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.opening-skip {
+  position: absolute; inset: auto auto max(20px, env(safe-area-inset-bottom)) 50%; transform: translateX(-50%);
+  min-height: 44px; padding: 0 15px; border: 1px solid #cadac18c; border-radius: 8px;
+  background: transparent; color: var(--paper); font: 650 13px var(--font-text); cursor: pointer;
+}
+.opening-skip:hover { background: #ffffff18; }
+.opening-skip:focus-visible { outline: 2px solid #d9e4c8; outline-offset: 3px; }
+
+.vivek-app .wrap { width: min(1216px, calc(100% - 64px)); margin-inline: auto; }
+.vivek-app :is(h1, h2) { font-family: var(--serif); font-weight: 400; letter-spacing: -.025em; text-wrap: balance; }
+.vivek-app :is(button, input, textarea, select) { font: inherit; }
+.vivek-app button { cursor: pointer; }
+.vivek-app button:disabled { cursor: not-allowed; }
+.vivek-app a { color: inherit; }
+.vivek-app :is(a, button, input, textarea, select, summary):focus-visible { outline: 3px solid #335c3c; outline-offset: 3px; }
+.vivek-app :is(a, button, input, textarea, select, summary, [tabindex]) { scroll-margin-top: calc(var(--nav-height) + 24px); }
+.vivek-app :is(p, li, dd) { overflow-wrap: anywhere; }
+.vivek-app .text-action { color: var(--moss); font-weight: 700; text-decoration: underline; text-underline-offset: .3em; }
+button.text-action { border: 0; padding: 0; background: transparent; min-height: 44px; text-align: left; }
+
+.site-nav { position: fixed; inset: 0 0 auto; height: var(--nav-height); z-index: 30; background: var(--canvas); border-bottom: 1px solid var(--rule); }
+.nav-inner { height: var(--nav-height); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.brand-lockup, .footer-brand { display: inline-flex; align-items: center; gap: 0; font-size: 29px; font-weight: 750; letter-spacing: -.085em; text-decoration: none; line-height: 1; }
+.brand-symbol { display: grid; place-items: center; width: 32px; height: 32px; margin-right: 9px; color: #f2f4e7; background: var(--moss); border-radius: 50%; font-size: 20px; }
+.brand-period { color: #536b46; }
+.nav-links { display: flex; align-items: center; gap: clamp(12px, 2.4vw, 36px); }
+.nav-links a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; text-decoration: none; font-size: 13px; font-weight: 720; }
+.nav-links a:hover, .footer-brand:hover { text-decoration: underline; text-underline-offset: 6px; }
+.menu-toggle { display: none; gap: 6px; align-items: center; justify-content: center; min-width: 46px; height: 44px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; color: var(--moss); }
+
+.vivek-app .primary-action, .vivek-app button.primary-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 16px;
+  min-height: 48px; padding: 10px 17px; border: 1px solid var(--moss); border-radius: 8px;
+  background: var(--moss); color: #fff; font-size: 14px; line-height: 1.2; font-weight: 750;
+  text-decoration: none; transition: background .18s ease, transform .18s ease;
+}
+.vivek-app .primary-action:hover:not(:disabled) { background: var(--moss-hover); transform: translateY(-2px); }
+.vivek-app .primary-action:active:not(:disabled) { transform: translateY(1px); }
+.vivek-app .primary-action:disabled { background: #dce2d7; border-color: #b9c5b4; color: #44543e; opacity: 1; }
+
+.vivek-app main > #concern {
+  background: radial-gradient(ellipse at 87% 30%, #e5ecdd 0%, transparent 66%), var(--canvas);
+}
+.concern-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; align-content: start; gap: 24px; }
+.vivek-app .concern-intro h1 { font-size: clamp(61px, 7.5vw, 108px); line-height: .92; margin: 0 0 23px; letter-spacing: -.035em; }
+.concern-intro h1 em { display: block; color: #42654a; font-weight: 400; }
+.concern-intro p { max-width: 43ch; font-size: clamp(15px, 1.4vw, 18px); color: var(--quiet); line-height: 1.58; margin: 0; }
+.guide-scope {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px 24px; width: fit-content;
+  margin-top: 25px; padding-top: 6px; border-top: 1px solid #ccd6c6; color: var(--quiet); font-size: 13px;
+}
+.guide-scope > :is(a, span) { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.guide-scope strong { color: var(--moss); font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.guide-scope a { text-decoration: none; }
+.guide-scope a:hover { text-decoration: underline; text-underline-offset: 5px; }
+
+.concern-form {
+  display: grid; min-width: 0; gap: 13px; background: var(--paper); border: 1px solid #c6d4c0; border-radius: 20px;
+  padding: clamp(20px, 3vw, 34px); box-shadow: 0 26px 57px -33px #27422f61;
+}
+.concern-form > label:first-child { font-size: clamp(17px, 1.6vw, 22px); font-weight: 750; letter-spacing: -.025em; }
+.concern-form textarea {
+  display: block; width: 100%; min-height: 110px; padding: 14px; border: 1px solid #a8b8a2; border-radius: 9px;
+  max-height: 40svh; resize: vertical; background: #f7f9f2; color: var(--ink-v); font-size: 16px; line-height: 1.55;
+}
+.concern-form textarea::placeholder, .catalog-search input::placeholder, .chat-entry input::placeholder { color: #5b6756; }
+.concern-form small { font-size: 12px; color: var(--quiet); line-height: 1.5; }
+.concern-field-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px 11px; }
+#concern-mic-help { display: block; }
+.vivek-app .dictation-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; white-space: nowrap;
+  padding: 0 10px; border: 1px solid #becbb7; border-radius: 8px;
+  background: #f5f8ef; color: var(--moss); font-size: 12px; font-weight: 750;
+}
+.dictation-button span { width: 16px; height: 16px; background: currentColor; mask: url("/assets/icons/demo/ui-mic.svg") center / contain no-repeat; }
+.dictation-button:hover:not(:disabled), .dictation-button[aria-pressed=true] { background: #e5efdc; border-color: #81967a; }
+.dictation-button:disabled { opacity: .6; }
+.dictation-status { grid-column: 1 / -1; }
+.dictation-status:empty { display: none; }
+.concern-form-actions, .concern-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.concern-form-actions .primary-action { justify-content: space-between; min-width: 152px; }
+.example-list { border-top: 1px solid var(--rule); padding-top: 12px; }
+.example-list:not([open]) .concern-examples { display: none; }
+.example-list summary { display: flex; align-items: center; min-height: 44px; width: fit-content; color: var(--moss); font-size: 13px; font-weight: 700; cursor: pointer; gap: 8px; }
+.example-list summary::after { content: "+"; font-size: 17px; }
+.example-list[open] summary::after { content: "−"; }
+.example-list summary::-webkit-details-marker { display: none; }
+.concern-examples button, .concern-reset, .brand-tab {
+  min-height: 44px; padding: 8px 12px; border: 1px solid #becbb7; border-radius: 8px;
+  background: #f5f8ef; color: #2b402c; font-size: 13px; line-height: 1.3; font-weight: 680;
+  transition: background .18s ease, border-color .18s ease;
+}
+.concern-examples button:hover, .concern-reset:hover, .brand-tab:hover:not(:disabled) { background: #e7efdf; border-color: #81967a; }
+.concern-consent, .label-consent { display: flex; align-items: flex-start; gap: 10px; color: var(--quiet); font-size: 13px; line-height: 1.5; cursor: pointer; }
+.concern-consent input, .label-consent input { margin: 1px 0 0; width: 19px; height: 19px; flex: 0 0 auto; accent-color: var(--moss); }
+.concern-form [role=alert] { margin: 0; color: #753c25; }
+.vivek-app main > #guidance { height: auto; min-height: 100svh; background: var(--canvas); }
+.concern-output { padding: clamp(19px, 4vw, 42px); background: var(--sage); border: 1px solid var(--rule); border-radius: 18px; }
+.concern-output.urgent, .concern-output.care_first { background: #f5e9d8; border-color: #c8986b; }
+.concern-output > h3 { margin: 0 0 12px; font: 400 clamp(31px, 4vw, 52px)/1.05 var(--serif); }
+.concern-message { max-width: 65ch; line-height: 1.6; }
+.concern-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 252px), 1fr)); gap: 12px; margin: 18px 0; }
+.evidence-card { background: var(--paper); padding: 18px; border-radius: 10px; border: 1px solid var(--rule); min-width: 0; }
+.evidence-card h4 { margin: 0 0 6px; font-size: 16px; font-weight: 750; }
+.evidence-card p { color: var(--quiet); font-size: 14px; line-height: 1.6; margin: 0 0 10px; }
+.evidence-card a, .answer-sources a, .comparison-modal table a { color: var(--moss); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
+.evidence-card ul { padding-left: 18px; margin: 12px 0 0; }
+.evidence-card li { margin-bottom: 8px; }
+.evidence-card li small { display: block; color: var(--quiet); margin-top: 2px; }
+.concern-ingredients, .concern-followup { margin-top: 25px; }
+.concern-ingredients > h3, .concern-followup > h3 { margin-bottom: 8px; font-size: 21px; }
+.concern-ingredients > p { font-size: 14px; color: var(--quiet); }
+
+.vivek-app main > #catalog { background: #eeefe5; }
+#catalog > .wrap:has(.compare-bar) { z-index: 2; }
+.catalog-controls { display: flex; gap: 14px 24px; align-items: end; justify-content: space-between; flex-wrap: wrap; }
+.catalog-search { width: min(100%, 404px); }
+.catalog-search label { display: block; font-size: 13px; font-weight: 750; margin-bottom: 6px; }
+.catalog-search input, .chat-entry input { width: 100%; min-width: 0; height: 48px; border: 1px solid #a8b8a2; border-radius: 8px; background: var(--paper); color: var(--ink-v); padding: 0 13px; font-size: 16px; }
+.brand-tabs { display: flex; flex-wrap: wrap; gap: 7px; }
+.brand-tab.active { background: var(--moss); border-color: var(--moss); color: white; }
+.catalog-results { font-size: 13px; font-weight: 680; color: var(--quiet); margin: 19px 0 12px; }
+.product-open { display: flex; flex-direction: column; flex: 1; width: 100%; min-width: 0; text-align: left; border: 0; padding: 0; background: transparent; color: inherit; }
+.product-photo { display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; position: relative; overflow: hidden; background: #e7ebdf; }
+.product-photo img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 8%; object-fit: contain; mix-blend-mode: multiply; transition: transform .24s ease; }
+.product-card:hover .product-photo img { transform: scale(1.03); }
+.product-body { width: 100%; flex: 1; display: flex; flex-direction: column; padding: 14px 14px 8px; min-width: 0; }
+.product-brand { color: #4b6146; font-size: 11px; font-weight: 750; }
+.product-name { margin: 6px 0 auto; font-size: 15px; font-weight: 750; line-height: 1.32; overflow-wrap: anywhere; }
+.product-price { margin: 9px 0 3px; font-weight: 750; font-size: 14px; font-variant-numeric: tabular-nums; }
+.source-mark { font-size: 11px; color: var(--quiet); }
+.compare-add { background: transparent; border: 0; border-top: 1px solid var(--rule); color: var(--moss); margin: 0 14px; padding: 9px 0; text-align: left; min-height: 44px; font-size: 12px; font-weight: 700; }
+.compare-add:hover, .compare-add.selected { text-decoration: underline; text-underline-offset: 3px; }
+.compare-add:disabled { color: #626c5e; text-decoration: none; }
+.catalog-pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.catalog-pagination button:disabled { opacity: .55; }
+.empty-state { padding: 18px; background: var(--paper); border-radius: 8px; }
+
+.tool-section { background: var(--canvas); }
+.tool-section.label-section { background: #eef1e8; }
+.tool-section:has(.chat-answer, .label-result) { height: auto; min-height: 100svh; }
+.vivek-app :is(.tool-section, .closing__cta) h2 { margin: 0 0 22px; font-size: clamp(37px, 4.7vw, 66px); line-height: 1; }
+.tool-split, .source-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.tool-copy > p, .source-layout p { max-width: 46ch; color: var(--quiet); line-height: 1.65; font-size: 17px; }
+.tool-copy > p { margin: 0 0 24px; }
+.tool-visual {
+  display: grid; place-items: center; position: relative; overflow: clip; height: clamp(285px, 30vw, 432px);
+  margin: 0; border-radius: 16px; background: #e4ebde;
+}
+.tool-visual img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.tool-visual a, .source-visual-link span {
+  position: absolute; inset: auto auto 14px 14px; display: inline-flex; align-items: center; min-height: 44px;
+  padding: 0 12px; border: 1px solid #becbb7; border-radius: 8px; background: #f5f8ef;
+  color: var(--moss); font-size: 13px; font-weight: 680;
+}
+.tool-visual a:hover, .source-visual-link:hover span { text-decoration: underline; text-underline-offset: 3px; }
+.label-visual { background: #dfe9dc; }
+.chat-form, .label-form { display: grid; gap: 12px; }
+.chat-form > label, .label-upload label { font-weight: 750; font-size: 13px; }
+.chat-entry { display: flex; gap: 6px; }
+.chat-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; color: var(--quiet); font-size: 12px; }
+.chat-options label { display: inline-flex; gap: 6px; align-items: center; }
+.chat-options select { border: 1px solid #c4cebf; border-radius: 6px; min-height: 44px; padding: 0 6px; background: #f4f7ee; color: var(--ink-v); font-size: 13px; }
+.chat-answer, .label-result { margin-top: 20px; padding: 15px; background: var(--sage); border-radius: 8px; }
+.chat-user { font-weight: 750; margin: 0 0 10px; }
+.answer-text { white-space: pre-wrap; line-height: 1.6; font-size: 14px; margin-bottom: 12px; }
+.answer-sources { padding-left: 20px; margin: 0; }
+.pending-answer { color: var(--quiet); font-size: 14px; margin-top: 17px; }
+.label-upload { display: grid; gap: 4px; min-width: 0; }
+.label-upload input { width: 100%; min-width: 0; color: var(--ink-v); font-size: 12px; padding: 4px 0; }
+.label-upload input::file-selector-button { min-height: 44px; border: 1px solid #b8c8b0; border-radius: 6px; padding-inline: 9px; background: var(--paper); color: var(--moss); font-weight: 700; cursor: pointer; }
+.label-upload small, .label-result p { color: var(--quiet); font-size: 12px; }
+.label-form > button { justify-self: start; }
+.label-result dl { margin: 10px 0 0; }
+.label-result dl div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 10px; border-top: 1px solid var(--rule); padding: 6px 0; font-size: 13px; }
+.label-result dd { margin: 0; }
+
+.source-layout .primary-action { margin-top: 22px; }
+.source-visual { display: grid; gap: 14px; min-width: 0; }
+.source-visual-link {
+  display: grid; place-items: center; position: relative; height: clamp(180px, 19vw, 280px);
+  overflow: clip; border-radius: 14px; background: #dbe7d8;
+}
+.source-visual-link img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.source-register { margin: 0; border-block: 1px solid #bcccb7; }
+.source-register > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.source-register > div + div { border-top: 1px solid var(--rule); }
+.source-register dt { color: var(--quiet); font-size: 13px; }
+.source-register dd { margin: 0; color: var(--moss); font-size: 14px; font-weight: 750; text-align: right; }
+
+.site-footer { background: var(--sage); color: var(--quiet); }
+.closing__cta { gap: 0; }
+.footer-layout { display: grid; justify-items: start; gap: 8px; }
+.footer-layout p { font-size: 13px; margin: 0; }
+.footer-brand { color: var(--moss); }
+
+.compare-bar { position: fixed; z-index: 35; inset: auto 0 0; background: #23372a; color: #fff; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -10px 28px -20px #1d2d167a; }
+.compare-bar-inner, .compare-bar-inner > div { display: flex; align-items: center; gap: 10px; }
+.compare-bar-inner { min-height: 68px; justify-content: space-between; }
+.compare-bar :is(strong, span, button) { font-size: 13px; }
+.compare-bar button { background: transparent; border: 0; color: white; min-height: 44px; padding: 4px 8px; }
+.vivek-app .compare-bar .primary-action { color: var(--moss); background: var(--paper); border-color: var(--paper); }
+.vivek-app .compare-bar .primary-action:disabled { background: #d7dfd3; color: #4a5a45; border-color: #d7dfd3; }
+.compare-bar [aria-hidden=true] { font-size: 16px; }
+
+.detail-modal, .comparison-modal { color: var(--ink-v); background: var(--paper); padding: 0; border: 1px solid var(--rule); border-radius: 14px; width: min(920px, calc(100% - 28px)); max-height: 90svh; overflow: auto; margin: auto; }
+.detail-modal::backdrop, .comparison-modal::backdrop { background: #19291ec1; }
+.dialog-content { position: relative; }
+.detail-modal .dialog-content { display: grid; grid-template-columns: 40% 60%; }
+.modal-close { position: absolute; z-index: 2; top: 10px; right: 10px; display: grid; place-items: center; width: 44px; height: 44px; color: var(--moss); background: var(--paper); border-radius: 50%; border: 1px solid var(--rule); font-size: 23px; }
+.detail-info, .comparison-modal .dialog-content { padding: clamp(24px, 4vw, 46px); }
+.detail-photo { display: grid; place-items: center; min-height: 360px; background: var(--sage); }
+.detail-photo img { width: min(85%, 360px); max-height: 400px; object-fit: contain; mix-blend-mode: multiply; }
+.detail-info h2, .comparison-modal h2 { font-size: clamp(30px, 4vw, 47px); line-height: 1; margin: 8px 20px 12px 0; }
+.detail-info p, .detail-info small, .comparison-modal p { color: var(--quiet); font-size: 13px; line-height: 1.6; }
+.detail-info dl { margin: 18px 0; }
+.detail-info dl div { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--rule); padding: 9px 0; font-size: 13px; }
+.detail-info dd { margin: 0; text-align: right; }
+.comparison-scroll { overflow-x: auto; }
+.comparison-modal table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px; }
+.comparison-modal :is(th, td) { border: 1px solid var(--rule); padding: 10px; text-align: left; vertical-align: top; }
+.comparison-modal th { background: var(--sage); }
+.comparison-modal th small { display: block; margin-top: 4px; color: var(--quiet); }
+
+@media (max-width: 940px) {
+  .vivek-app .wrap { width: min(1184px, calc(100% - 40px)); }
+  .vivek-app .concern-intro h1 { font-size: clamp(56px, 8vw, 76px); }
+}
+@media (max-width: 700px) {
+  :root { --nav-height: 56px; }
+  .vivek-app .wrap { width: min(1184px, calc(100% - 32px)); }
+  .nav-links { display: none; position: absolute; inset: var(--nav-height) 0 auto; padding: 10px 16px; background: var(--canvas); border-bottom: 1px solid var(--rule); }
+  .nav-links.open { display: grid; gap: 0; }
+  .nav-links a { padding-inline: 9px; }
+  .menu-toggle { display: inline-flex; }
+  .concern-layout, .tool-split, .source-layout { grid-template-columns: 1fr; gap: 18px; }
+  .vivek-app .concern-intro h1 { font-size: clamp(49px, 12vw, 72px); margin-bottom: 12px; }
+  .guide-scope { gap: 2px 17px; margin-top: 14px; padding-top: 0; }
+  .guide-scope strong { font-size: 17px; }
+  .concern-form { gap: 11px; }
+  .concern-form textarea { min-height: 96px; }
+  .concern-form-actions > .primary-action { flex: 1 0 auto; }
+  .catalog-controls { align-items: start; }
+  .product-name { font-size: 14px; }
+  .tool-visual { height: min(265px, 66vw); }
+  .source-layout p { font-size: 15px; line-height: 1.5; }
+  .source-register > div { padding-block: 7px; }
+  .closing.site-footer > .wrap { row-gap: 24px; }
+  .compare-bar-inner > div:first-child > span { display: none; }
+  .detail-modal .dialog-content { grid-template-columns: 1fr; }
+  .detail-photo { min-height: 180px; }
+  .detail-photo img { max-height: 200px; padding: 12px; }
+}
+@media (max-height: 760px) {
+  .vivek-app main > #concern { height: auto; min-height: 100svh; }
+}
+@media (min-width: 1280px) and (min-height: 800px) {
+  .concern-form textarea { min-height: clamp(180px, 30svh, 270px); }
+  .tool-visual { height: clamp(410px, 60svh, 540px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .opening-progress { display: none; }
+  .vivek-app *, .vivek-app *::before, .vivek-app *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
