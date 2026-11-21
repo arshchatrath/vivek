@@ -7,7 +7,7 @@ Updated: 21 November 2026
 - Name: Vivek; green and warm neutral visual theme.
 - Groq is the text model provider for this MVP, per the user's correction to the original xAI Grok specification. Gemini handles opt-in packaging images.
 - Four Mosaic brands are included. The Fellowship story still needs the user's actual interview notes and a clearly described interview cohort; do not invent those findings.
-- Zero-budget architecture: static Next.js export, FastAPI, local PostgreSQL + pgvector, Redis quotas, local MiniLM embeddings, and free developer API accounts.
+- Zero-budget architecture: static Next.js export, FastAPI, PostgreSQL with pgvector, Redis quotas, MiniLM embeddings, and free developer API accounts.
 - Health-sensitive fields remain unknown unless explicitly sourced and reviewed. Manufacturer descriptions are not independent clinical evidence.
 
 ## Completed locally
@@ -43,13 +43,17 @@ Updated: 21 November 2026
 - The final hero, voice, and pricing build ended its visual harness rounds at `GATE: OPEN 24`. The heading and shared column alignment findings cleared. The remaining report covers full-screen section sizing and structure, visuals, repeated cards, and multiple actions in the hero. No waivers were applied. Full output is in `shots/gate-hero-polish-final.log`.
 - Fixed those 24 blocking layout findings. The fixed header, standalone product tools, and combined sources footer put the initial desktop sections on the viewport grid. The catalog now uses a product photo shelf and compact listing rows, with a native brand filter on mobile. Confirmed `GATE: PASS` with 19 advisory warnings and zero waivers in `shots/gate-findings-verified.log`. The production build, frontend scan, all 29 API tests, and desktop and mobile browser regression checks passed. The browser also verified live Gnani transcription, concern sources, label-upload consent, and product comparison.
 - Product prices and images are observations from brand pages and may change. Ingredients, warnings, age guidance, independent evidence, reviews, and clinical claims are not yet verified or published as facts.
-- No hosted URL exists yet. Deployment needs the user's chosen free accounts and server-side secrets.
+## Production preview
 
-## Next work requiring external input or production services
+- [Vivek](https://vivek-fellowship.onrender.com) and the [FastAPI service](https://vivek-fellowship-api.onrender.com/api/v1/health) are on Render. Both services track the private [Vivek GitHub repository](https://github.com/arshchatrath/vivek). The deployed application commit is `0a561de`.
+- Render PostgreSQL 17 and Key Value are private to the Singapore services. Initial deployment verified 323 catalog listings, 323 product embeddings, and 30 guidance passages from 12 topics in the hosted database.
+- The user selected the free Render database, which expires on **21 December 2026 at 18:25 IST**. The API may take about a minute to wake after idle time. Provider credentials are configured in Render's API environment. [Deployment guide](docs/free-deployment.md)
+- Production checks passed for site HTTPS, the mobile browser flow, exact CORS, four-brand catalog coverage, rupee pricing, PostgreSQL concern guidance and follow-ups, pgvector retrieval with Groq citations, and Gnani transcription. Gemini read a synthetic label. When a repeat call returned HTTP 503, Vivek displayed the label-reader fallback.
+- The final API rollout starts directly from the seeded database. The 29 API unit tests passed.
 
-1. When deploying, configure the Groq and Gemini keys in the host secret store and verify the same flows against the deployed API. Enable Gemini label reading only where intended.
-2. Choose a free static host, Python host, PostgreSQL/pgvector host, and Redis host. Set exact CORS/API origins and deploy via HTTPS. Free-tier availability and acceptable-use rules should be checked at selection time.
-3. Review source coverage and sensitive fields with brand officials. Promote approved ingredient/warning facts only after per-field verification. The change log records later listing differences.
+## Next work requiring external input
+
+1. Review source coverage and sensitive fields with brand officials. Promote approved ingredient and warning facts only after per-field verification. The change log records later listing differences.
    Expand the concern corpus from the audit in priority order. Have a clinician review guidance and checkout risk before external use. Many child nutrition, supplement, and symptom-related listing claims still need evidence review.
-4. Provide actual interview notes and the target brand/problem statement for the Fellowship submission. The all-brand product scope stays intact.
-5. The long-term master specification includes accounts, saved routines, journals, reviews, checkout guidance, admin workflows, stronger moderation and privacy controls, and clinical evidence integration. Those are outside this initial MVP build and are not represented as complete.
+2. Provide actual interview notes and the problem statement for the Fellowship submission.
+3. The long-term specification includes accounts, saved routines, journals, reviews, checkout guidance, admin workflows, stronger moderation and privacy controls, and clinical evidence integration.
