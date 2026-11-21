@@ -102,6 +102,17 @@ export function FollowupInfo({ id }: { id: string }) {
   </details>;
 }
 
+function SourcedAnswer({ result }: { result: ConcernResponse }) {
+  return <>
+    {result.followup?.length ? <div className="concern-followup">
+      <h3>Relevant passages for your question</h3><EvidenceCards cards={result.followup} />
+    </div> : null}
+    {result.status === "guidance" && <ConcernProducts ingredients={result.ingredients ?? []} />}
+    {result.guidance?.length ? <EvidenceCards cards={result.guidance} /> : null}
+    {result.ingredients?.length ? <UnmatchedIngredients ingredients={result.ingredients} /> : null}
+  </>;
+}
+
 export function ConcernResult({ result, chooseTopic, tryGroq, pending = false }: {
   result: ConcernResponse;
   chooseTopic: (topic: string) => void;
@@ -120,12 +131,7 @@ export function ConcernResult({ result, chooseTopic, tryGroq, pending = false }:
     {result.topics && <div className="concern-examples">
       {result.topics.map((topic) => <button type="button" key={topic.id} disabled={pending} onClick={() => chooseTopic(topic.id)}>{topic.title}</button>)}
     </div>}
-    {result.followup?.length ? <div className="concern-followup">
-      <h3>Relevant passages for your question</h3><EvidenceCards cards={result.followup} />
-    </div> : null}
-    {result.status === "guidance" && <ConcernProducts ingredients={result.ingredients ?? []} />}
-    {result.guidance?.length ? <EvidenceCards cards={result.guidance} /> : null}
-    {result.ingredients?.length ? <UnmatchedIngredients ingredients={result.ingredients} /> : null}
+    <SourcedAnswer result={result} />
   </>;
 }
 

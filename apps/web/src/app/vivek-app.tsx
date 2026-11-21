@@ -279,6 +279,20 @@ function CatalogPagination({ page, last, goToPage }: { page: number; last: boole
   </nav>;
 }
 
+function CatalogGrid({ products, selected, toggle, setDetail }: CatalogActions & {
+  products: Product[];
+  selected: string[];
+}) {
+  const renderProduct = (product: Product) => (
+    <ProductCard key={product.id} product={product} selected={selected.includes(product.id)}
+      atLimit={selected.length >= 4} setDetail={setDetail} toggle={toggle} />
+  );
+  return <>
+    {products.length > 0 && <div className="product-shelf">{products.slice(0, 4).map(renderProduct)}</div>}
+    {products.length > 4 && <div className="product-ledger">{products.slice(4).map(renderProduct)}</div>}
+  </>;
+}
+
 function Catalog({ products, selected, toggle, setDetail, comparison }: CatalogActions & {
   products: Product[];
   selected: string[];
@@ -298,10 +312,6 @@ function Catalog({ products, selected, toggle, setDetail, comparison }: CatalogA
     results.current?.focus();
   }
 
-  function renderProduct(product: Product) {
-    return <ProductCard key={product.id} product={product} selected={selected.includes(product.id)} atLimit={selected.length >= 4} setDetail={setDetail} toggle={toggle} />;
-  }
-
   return (
     <section id="catalog" className="catalog-section" aria-labelledby="catalog-title">
       <div className="wrap">
@@ -316,8 +326,7 @@ function Catalog({ products, selected, toggle, setDetail, comparison }: CatalogA
         <p className="catalog-results" ref={results} tabIndex={-1} role="status">
           {filtered.length ? `Products ${start + 1}–${end} of ${filtered.length}` : "No matching products"}
         </p>
-        {pageProducts.length > 0 && <div className="product-shelf">{pageProducts.slice(0, 4).map(renderProduct)}</div>}
-        {pageProducts.length > 4 && <div className="product-ledger">{pageProducts.slice(4).map(renderProduct)}</div>}
+        <CatalogGrid products={pageProducts} selected={selected} setDetail={setDetail} toggle={toggle} />
         {!filtered.length && <div className="empty-state">
           <p>Try another product name or clear your filters.</p>
           <button className="brand-tab" type="button" onClick={() => {
