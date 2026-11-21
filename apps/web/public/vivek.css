@@ -78,10 +78,9 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .nav-actions { display: flex; align-items: center; gap: 7px; }
 .vivek-app .nav-chat-link {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: 44px; padding: 0 12px; border-radius: 8px; white-space: nowrap;
-  background: var(--sage); color: var(--moss); font-size: 13px; font-weight: 750; text-decoration: none;
+  min-height: 44px; padding: 0 12px; white-space: nowrap;
+  color: var(--moss); text-decoration: none;
 }
-.vivek-app .nav-chat-link:hover { background: #d5e3ce; }
 .menu-toggle { display: none; gap: 6px; align-items: center; justify-content: center; min-width: 46px; height: 44px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; color: var(--moss); }
 
 .vivek-app .primary-action, .vivek-app button.primary-action {
@@ -141,12 +140,12 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .example-list summary::after { content: "+"; font-size: 17px; }
 .example-list[open] summary::after { content: "−"; }
 .example-list summary::-webkit-details-marker { display: none; }
-.concern-examples button, .concern-reset, .brand-tab {
+.concern-examples button, .concern-reset, .brand-tab, .nav-chat-link {
   min-height: 44px; padding: 8px 12px; border: 1px solid #becbb7; border-radius: 8px;
   background: #f5f8ef; color: #2b402c; font-size: 13px; line-height: 1.3; font-weight: 680;
   transition: background .18s ease, border-color .18s ease;
 }
-.concern-examples button:hover, .concern-reset:hover, .brand-tab:hover:not(:disabled) { background: #e7efdf; border-color: #81967a; }
+.concern-examples button:hover, .concern-reset:hover, .brand-tab:hover:not(:disabled), .nav-chat-link:hover { background: #e7efdf; border-color: #81967a; }
 .label-consent { display: flex; align-items: flex-start; gap: 10px; color: var(--quiet); font-size: 13px; line-height: 1.5; cursor: pointer; }
 .label-consent input { margin: 1px 0 0; width: 19px; height: 19px; flex: 0 0 auto; accent-color: var(--moss); }
 .followup-info { position: relative; }
