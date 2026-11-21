@@ -44,12 +44,15 @@ URGENT_SPELLINGS = (
     "shortness of breath", "swollen tongue", "anaphylaxis", "seizures", "suicidal",
 )
 ENGLISH_WORDS = re.compile(r"[a-z]+(?:'[a-z]+)?")
+URGENT_MESSAGE = "These symptoms can need urgent help. Contact your local emergency service now."
+CARE_FIRST_MESSAGE = "Discuss this concern with a qualified clinician before choosing a product."
 
 
 class ConcernRequest(BaseModel):
     concern: str = Field(min_length=3, max_length=1000)
     topic: str | None = Field(default=None, max_length=50, pattern=r"^[a-z-]+$")
     share_followup: bool = False
+    share_routing: bool = False
 
     @field_validator("concern", mode="before")
     @classmethod
@@ -204,8 +207,9 @@ def resolve_concern(request: ConcernRequest, load_products) -> dict:
     question = normalize_concern(request.concern)
     words = ENGLISH_WORDS.findall(question)
     if URGENT.search(question) or any(typo_near_alias(words, alias) for alias in URGENT_SPELLINGS):
-        return {"status": "urgent", "message": "These symptoms can need urgent help. Contact your local emergency service now."}
+        return {"status": "urgent", "message": URGENT_MESSAGE}
     matches = related_topics(question)
+    multiple_concerns = len(matches) > 1
     context = request.topic if request.topic in guides() else None
     care_first = bool(CARE_FIRST.search(question))
     selected = context if context and not request.share_followup and (not matches or context in matches) else None
@@ -217,14 +221,20 @@ def resolve_concern(request: ConcernRequest, load_products) -> dict:
             selected = context
     if not selected:
         if care_first:
-            return {"status": "care_first", "message": "Discuss this concern with a qualified clinician before choosing a product."}
+            return {"status": "care_first", "message": CARE_FIRST_MESSAGE}
         options = [topic for topic in covered_topics() if not matches or topic["id"] in matches]
         if matches:
-            return {"status": "clarify", "message": "Which option best describes what you’re noticing?", "topics": options}
+            return {
+                "status": "clarify",
+                "message": "Which option best describes what you’re noticing?",
+                "topics": options,
+                "can_retry_with_groq": not multiple_concerns,
+            }
         return {
             "status": "outside_coverage",
             "message": "Vivek couldn’t find a supported topic for that description. What changes have you noticed, and where?",
             "topics": options,
+            "can_retry_with_groq": True,
         }
 
     guide = guides()[selected]

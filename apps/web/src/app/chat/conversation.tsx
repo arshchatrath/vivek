@@ -9,6 +9,7 @@ type Turn = {
   question: string;
   topic?: string;
   followup: boolean;
+  shareRouting?: boolean;
   result?: ConcernResponse;
   failed?: boolean;
 };
@@ -44,7 +45,9 @@ export default function Conversation() {
     setPending(index);
     setTurns((previous) => index === previous.length ? [...previous, turn] : previous.map((item, position) => position === index ? turn : item));
     try {
-      const result = await fetchConcern(turn.question, turn.topic, turn.followup);
+      const result = await fetchConcern(turn.question, {
+        topic: turn.topic, shareFollowup: turn.followup, shareRouting: turn.shareRouting,
+      });
       setTurns((previous) => previous.map((item, position) => position === index ? { ...turn, result } : item));
     } catch {
       setTurns((previous) => previous.map((item, position) => position === index ? { ...turn, failed: true } : item));
@@ -100,7 +103,8 @@ export default function Conversation() {
               </div>}
               {turn.result && <article aria-label="Vivek’s answer" className={`concern-output ${turn.result.status}`}>
                 <ConcernResult result={turn.result} pending={pending !== null}
-                  chooseTopic={(selected) => void ask({ question: turn.question, topic: selected, followup: false }, index)} />
+                  chooseTopic={(selected) => void ask({ question: turn.question, topic: selected, followup: false }, index)}
+                  tryGroq={() => void ask({ question: turn.question, followup: false, shareRouting: true }, index)} />
               </article>}
             </div>
           </li>)}

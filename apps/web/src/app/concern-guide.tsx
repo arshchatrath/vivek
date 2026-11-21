@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import ConcernDictation from "./concern-dictation";
 
 type Topic = { id: string; title: string };
@@ -16,7 +16,10 @@ export type ConcernResponse = {
   guidance?: Passage[];
   followup?: Passage[];
   ingredients?: Ingredient[];
+  can_retry_with_groq?: boolean;
 };
+
+type ConcernOptions = { topic?: string; shareFollowup?: boolean; shareRouting?: boolean };
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export const concernLimit = 1000;
@@ -36,10 +39,10 @@ const examples = [
   ["Constipation", "I have been constipated lately."],
 ];
 
-export async function fetchConcern(concern: string, topic?: string, shareFollowup = false): Promise<ConcernResponse> {
+export async function fetchConcern(concern: string, { topic, shareFollowup, shareRouting }: ConcernOptions = {}): Promise<ConcernResponse> {
   const response = await fetch(`${API}/api/v1/concerns`, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ concern, topic, share_followup: shareFollowup }),
+    body: JSON.stringify({ concern, topic, share_followup: shareFollowup, share_routing: shareRouting }),
   });
   if (!response.ok) throw new Error("Guidance request failed");
   return response.json();
@@ -92,14 +95,21 @@ export function FollowupInfo({ id }: { id: string }) {
   </details>;
 }
 
-export function ConcernResult({ result, chooseTopic, pending = false }: {
+export function ConcernResult({ result, chooseTopic, tryGroq, pending = false }: {
   result: ConcernResponse;
   chooseTopic: (topic: string) => void;
+  tryGroq?: () => void;
   pending?: boolean;
 }) {
+  const routingNote = useId();
+
   return <>
     <h3>{result.status === "urgent" ? "Seek urgent help" : result.topic?.title || "Find relevant guidance"}</h3>
     {result.message && <p className="concern-message">{result.message}</p>}
+    {result.can_retry_with_groq && tryGroq && <div className="concern-routing">
+      <button type="button" className="concern-reset" disabled={pending} onClick={tryGroq} aria-describedby={routingNote}>Try with Groq</button>
+      <p id={routingNote}>This sends your question to Groq to find a guide. Leave out names and contact details.</p>
+    </div>}
     {result.topics && <div className="concern-examples">
       {result.topics.map((topic) => <button type="button" key={topic.id} disabled={pending} onClick={() => chooseTopic(topic.id)}>{topic.title}</button>)}
     </div>}
@@ -113,6 +123,7 @@ export function ConcernResult({ result, chooseTopic, pending = false }: {
 
 function useConcernGuide() {
   const [concern, setConcern] = useState("");
+  const [submitted, setSubmitted] = useState("");
   const [result, setResult] = useState<ConcernResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -120,18 +131,20 @@ function useConcernGuide() {
   const field = useRef<HTMLTextAreaElement>(null);
   const output = useRef<HTMLDivElement>(null);
 
-  async function requestGuidance(topic?: string, share = false) {
+  async function requestGuidance(options: ConcernOptions = {}, text = concern) {
     if (pending) return;
-    if (concern.trim().length < 3) {
+    const question = text.trim();
+    if (question.length < 3) {
       setError("Enter a few words about what you’re experiencing.");
       field.current?.focus();
       return;
     }
     setPending(true);
+    setSubmitted(question);
     setError("");
-    setResult(null);
+    if (!options.shareRouting) setResult(null);
     try {
-      setResult(await fetchConcern(concern, topic, share));
+      setResult(await fetchConcern(question, options));
       requestAnimationFrame(() => output.current?.focus());
     } catch {
       setError("Vivek couldn’t load guidance. Try again in a moment.");
@@ -154,7 +167,7 @@ function useConcernGuide() {
     field.current?.focus();
   }
 
-  return { concern, setConcern, result, pending, error, followup,
+  return { concern, setConcern, submitted, result, pending, error, followup,
     field, output, selectExample, askFollowup, requestGuidance };
 }
 
@@ -166,7 +179,7 @@ function ConcernForm({ guide }: { guide: ReturnType<typeof useConcernGuide> }) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void requestGuidance(followup?.id, Boolean(followup));
+    void requestGuidance({ topic: followup?.id, shareFollowup: Boolean(followup) });
   }
 
   return <form className="concern-form app-frame" onSubmit={submit} aria-busy={pending}>
@@ -195,7 +208,7 @@ function ConcernForm({ guide }: { guide: ReturnType<typeof useConcernGuide> }) {
 
 export default function ConcernGuide({ catalogSize }: { catalogSize: number }) {
   const guide = useConcernGuide();
-  const { result, output, askFollowup, requestGuidance } = guide;
+  const { result, concern, submitted, output, askFollowup, requestGuidance } = guide;
   const followupTopic = result?.status === "guidance" ? result.topic : undefined;
   return <>
     <section id="concern" className="hero concern-section" data-enter aria-labelledby="concern-title">
@@ -216,7 +229,9 @@ export default function ConcernGuide({ catalogSize }: { catalogSize: number }) {
     <section id="guidance" aria-label="Concern results" hidden={!result}>
       <div className="wrap">
         <div className={result ? `concern-output ${result.status}` : undefined} tabIndex={-1} ref={output} aria-live="polite">
-          {result && <ConcernResult result={result} pending={guide.pending} chooseTopic={(topic) => void requestGuidance(topic)} />}
+          {result && <ConcernResult result={result} pending={guide.pending}
+            chooseTopic={(topic) => void requestGuidance({ topic }, submitted)}
+            tryGroq={concern.trim() === submitted ? () => void requestGuidance({ shareRouting: true }, submitted) : undefined} />}
           {followupTopic && <button className="concern-reset" type="button" onClick={() => askFollowup(followupTopic)}>Ask a follow-up ↗</button>}
         </div>
       </div>

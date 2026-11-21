@@ -130,3 +130,76 @@ def test_hybrid_retrieval_with_seeded_postgres(question, topic):
     else:
         assert result["status"] == "outside_coverage"
         assert not result.get("ingredients")
+
+
+@pytest.mark.parametrize(("answer", "status", "topic"), [
+    ({"action": "match", "topic": "scalp-flakes"}, "guidance", "scalp-flakes"),
+    ({"action": "match", "topic": "unreviewed"}, "outside_coverage", None),
+    ({"action": "match", "topic": "scalp-flakes", "answer": "extra text"}, "outside_coverage", None),
+    ({"action": "clarify", "topic": None}, "clarify", None),
+    ({"action": "outside_coverage", "topic": None}, "outside_coverage", None),
+    ({"action": "care_first", "topic": None}, "care_first", None),
+    ({"action": "urgent", "topic": None}, "urgent", None),
+    (None, "outside_coverage", None),
+])
+def test_groq_routing_requires_opt_in_and_uses_saved_results(monkeypatch, answer, status, topic):
+    import app.main as api
+    import app.concerns as concerns
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(concerns, "search_topics", lambda _: (None, []))
+    calls = []
+    question = "whyt skayls thru mi hayer"
+
+    async def groq_reply(system, payload):
+        calls.append(payload)
+        return answer
+
+    monkeypatch.setattr(api, "groq_json", groq_reply)
+    first = client.post("/api/v1/concerns", json={"concern": question}).json()
+    assert first["status"] == "outside_coverage" and first["can_retry_with_groq"]
+    assert not calls
+    result = client.post("/api/v1/concerns", json={"concern": question, "share_routing": True}).json()
+    assert len(calls) == 1 and calls[0]["question"] == question
+    assert all(set(details) == {"id", "title"} for details in calls[0]["topics"])
+    assert result["status"] == status and (result.get("topic") or {}).get("id") == topic
+    assert not result.get("can_retry_with_groq")
+    if topic:
+        assert result["guidance"] and all(card["source"]["url"].startswith("https://") for card in result["guidance"])
+    else:
+        assert not result.get("guidance") and not result.get("ingredients")
+
+
+@pytest.mark.parametrize(("question", "status"), [
+    ("I have chset pain", "urgent"),
+    ("I have acne and hairlos", "clarify"),
+    ("hairlos", "guidance"),
+])
+def test_groq_routing_skips_safety_results_and_known_topics(monkeypatch, question, status):
+    import app.main as api
+
+    async def unexpected_call(*_):
+        pytest.fail("Groq should not be called for a resolved or higher-priority result")
+
+    monkeypatch.setattr(api, "route_unclear_concern", unexpected_call)
+    reply = client.post("/api/v1/concerns", json={"concern": question, "share_routing": True}).json()
+    assert reply["status"] == status and not reply.get("can_retry_with_groq")
+
+
+def test_groq_routing_respects_unavailable_quota(monkeypatch):
+    import app.main as api
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setenv("DATABASE_URL", "")
+    monkeypatch.setattr(api, "provider_call_allowed", lambda _: False)
+
+    def unexpected_client(*args, **kwargs):
+        pytest.fail("The Groq client should not be opened without quota")
+
+    monkeypatch.setattr(api.httpx, "AsyncClient", unexpected_client)
+    result = client.post("/api/v1/concerns", json={
+        "concern": "whyt skayls thru mi hayer",
+        "share_routing": True,
+    }).json()
+    assert result["status"] == "outside_coverage" and result["topics"]
+    assert "unavailable" in result["message"]

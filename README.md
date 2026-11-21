@@ -45,7 +45,7 @@ flowchart LR
     API --> Providers["Groq text · Gemini labels · Gnani voice"]
 ```
 
-Initial concern answers use zero Groq credits. Groq selects relevant excerpts for opt-in follow-ups within the same topic. For product questions, the API retrieves listing facts with full-text search and pgvector embeddings, then Groq writes a cited answer. Gnani transcribes clips of up to 20 seconds. After you consent to label reading, the API strips photo metadata and sends the image to Gemini.
+Initial concern search uses zero Groq credits. When the local match is uncertain, **Try with Groq** shares the submitted question and the list of guide titles for one topic check. Any matched answer still comes from the saved guide. This check uses the same daily Groq quota as opt-in follow-ups and product questions. Gnani transcribes clips of up to 20 seconds. After you consent to label reading, the API strips photo metadata and sends the image to Gemini.
 
 ## Run locally on Windows
 

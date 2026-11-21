@@ -171,6 +171,11 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .concern-output.urgent, .concern-output.care_first { background: #f5e9d8; border-color: #c8986b; }
 .concern-output > h3 { margin: 0 0 12px; font: 400 clamp(31px, 4vw, 52px)/1.05 var(--serif); }
 .concern-message { max-width: 65ch; line-height: 1.6; }
+.concern-routing {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  margin-block: 12px 16px;
+}
+.concern-routing > p { max-width: 54ch; margin: 0; color: var(--quiet); font-size: 13px; line-height: 1.5; }
 .concern-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 252px), 1fr)); gap: 12px; margin: 18px 0; }
 .evidence-card { background: var(--paper); padding: 18px; border-radius: 10px; border: 1px solid var(--rule); min-width: 0; }
 .evidence-card h4 { margin: 0 0 6px; font-size: 16px; font-weight: 750; }
