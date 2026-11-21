@@ -8,6 +8,7 @@
   --moss: #2e4834;
   --moss-hover: #213929;
   --nav-height: 72px;
+  --ease-v: cubic-bezier(.22, .7, .24, 1);
   --nav: var(--nav-height);
   --serif: "Instrument Serif", Georgia, serif;
   --p-bg: var(--canvas);
@@ -74,6 +75,13 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .nav-links { display: flex; align-items: center; gap: clamp(12px, 2.4vw, 36px); }
 .nav-links a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; text-decoration: none; font-size: 13px; font-weight: 720; }
 .nav-links a:hover, .footer-brand:hover { text-decoration: underline; text-underline-offset: 6px; }
+.nav-actions { display: flex; align-items: center; gap: 7px; }
+.vivek-app .nav-chat-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 12px; border-radius: 8px; white-space: nowrap;
+  background: var(--sage); color: var(--moss); font-size: 13px; font-weight: 750; text-decoration: none;
+}
+.vivek-app .nav-chat-link:hover { background: #d5e3ce; }
 .menu-toggle { display: none; gap: 6px; align-items: center; justify-content: center; min-width: 46px; height: 44px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; color: var(--moss); }
 
 .vivek-app .primary-action, .vivek-app button.primary-action {
@@ -139,8 +147,25 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
   transition: background .18s ease, border-color .18s ease;
 }
 .concern-examples button:hover, .concern-reset:hover, .brand-tab:hover:not(:disabled) { background: #e7efdf; border-color: #81967a; }
-.concern-consent, .label-consent { display: flex; align-items: flex-start; gap: 10px; color: var(--quiet); font-size: 13px; line-height: 1.5; cursor: pointer; }
-.concern-consent input, .label-consent input { margin: 1px 0 0; width: 19px; height: 19px; flex: 0 0 auto; accent-color: var(--moss); }
+.label-consent { display: flex; align-items: flex-start; gap: 10px; color: var(--quiet); font-size: 13px; line-height: 1.5; cursor: pointer; }
+.label-consent input { margin: 1px 0 0; width: 19px; height: 19px; flex: 0 0 auto; accent-color: var(--moss); }
+.followup-info { position: relative; }
+.followup-info summary {
+  display: grid; place-items: center; width: 44px; min-height: 44px; border-radius: 8px;
+  cursor: pointer; list-style: none; color: var(--moss);
+}
+.followup-info summary::-webkit-details-marker { display: none; }
+.followup-info summary:hover, .followup-info[open] summary { background: var(--sage); }
+.followup-info summary span {
+  display: grid; place-items: center; width: 19px; height: 19px;
+  border: 1px solid currentColor; border-radius: 50%; font: 700 14px/1 Georgia, serif;
+}
+.followup-info p {
+  position: absolute; z-index: 3; right: 0; bottom: calc(100% + 8px); margin: 0; padding: 12px 14px;
+  width: min(245px, calc(100vw - 64px)); border: 1px solid var(--rule); border-radius: 8px;
+  background: var(--paper); color: var(--quiet); box-shadow: 0 8px 24px -10px #24392d60;
+  font-size: 13px; line-height: 1.5;
+}
 .concern-form [role=alert] { margin: 0; color: #753c25; }
 .vivek-app main > #guidance { height: auto; min-height: 100svh; background: var(--canvas); }
 .concern-output { padding: clamp(19px, 4vw, 42px); background: var(--sage); border: 1px solid var(--rule); border-radius: 18px; }
@@ -172,6 +197,7 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .product-photo { display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; position: relative; overflow: hidden; background: #e7ebdf; }
 .product-photo img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 8%; object-fit: contain; mix-blend-mode: multiply; transition: transform .24s ease; }
 .product-card:hover .product-photo img { transform: scale(1.03); }
+.product-photo.motion-tilted img { transition: none; }
 .product-body { width: 100%; flex: 1; display: flex; flex-direction: column; padding: 14px 14px 8px; min-width: 0; }
 .product-brand { color: #4b6146; font-size: 11px; font-weight: 750; }
 .product-name { margin: 6px 0 auto; font-size: 15px; font-weight: 750; line-height: 1.32; overflow-wrap: anywhere; }
@@ -189,6 +215,7 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .tool-section:has(.chat-answer, .label-result) { height: auto; min-height: 100svh; }
 .vivek-app :is(.tool-section, .closing__cta) h2 { margin: 0 0 22px; font-size: clamp(37px, 4.7vw, 66px); line-height: 1; }
 .tool-split, .source-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.tool-copy { min-width: 0; }
 .tool-copy > p, .source-layout p { max-width: 46ch; color: var(--quiet); line-height: 1.65; font-size: 17px; }
 .tool-copy > p { margin: 0 0 24px; }
 .tool-visual {
@@ -206,6 +233,7 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .chat-form, .label-form { display: grid; gap: 12px; }
 .chat-form > label, .label-upload label { font-weight: 750; font-size: 13px; }
 .chat-entry { display: flex; gap: 6px; }
+.chat-entry .primary-action { flex-shrink: 0; }
 .chat-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; color: var(--quiet); font-size: 12px; }
 .chat-options label { display: inline-flex; gap: 6px; align-items: center; }
 .chat-options select { border: 1px solid #c4cebf; border-radius: 6px; min-height: 44px; padding: 0 6px; background: #f4f7ee; color: var(--ink-v); font-size: 13px; }
@@ -270,17 +298,43 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .comparison-modal th { background: var(--sage); }
 .comparison-modal th small { display: block; margin-top: 4px; color: var(--quiet); }
 
+@keyframes vivek-appear {
+  from { opacity: 0; translate: 0 7px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes vivek-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.vivek-app :is(.dictation-button, .nav-chat-link, .menu-toggle, .compare-add, .modal-close, .followup-info summary, textarea, input, select) {
+  transition: background-color .22s var(--ease-v), border-color .22s var(--ease-v), color .22s var(--ease-v), opacity .22s var(--ease-v);
+}
+.vivek-app :is(.nav-chat-link, .menu-toggle, .modal-close):active { translate: 0 1px; }
+.vivek-app :is(.concern-output, .chat-answer, .label-result, .empty-state, .compare-bar, .dictation-status:not(:empty), .product-card),
+.vivek-app :is(.example-list, .followup-info)[open] > :is(.concern-examples, p),
+.vivek-app :is(.detail-modal, .comparison-modal)[open] {
+  animation: vivek-appear .28s var(--ease-v) both;
+}
+.vivek-app :is(.detail-modal, .comparison-modal)[open]::backdrop { animation: vivek-fade .24s ease both; }
+
 @media (max-width: 940px) {
   .vivek-app .wrap { width: min(1184px, calc(100% - 40px)); }
   .vivek-app .concern-intro h1 { font-size: clamp(56px, 8vw, 76px); }
 }
+@media (max-width: 850px) {
+  .nav-links {
+    display: none; position: absolute; inset: var(--nav-height) 0 auto;
+    max-height: calc(100dvh - var(--nav-height)); overflow-y: auto; padding: 8px 16px 12px;
+    background: var(--canvas); border-bottom: 1px solid var(--rule);
+  }
+  .nav-links.open { display: grid; gap: 0; animation: vivek-appear .22s var(--ease-v) both; }
+  .nav-links a { padding-inline: 9px; }
+  .menu-toggle { display: inline-flex; }
+}
 @media (max-width: 700px) {
   :root { --nav-height: 56px; }
   .vivek-app .wrap { width: min(1184px, calc(100% - 32px)); }
-  .nav-links { display: none; position: absolute; inset: var(--nav-height) 0 auto; padding: 10px 16px; background: var(--canvas); border-bottom: 1px solid var(--rule); }
-  .nav-links.open { display: grid; gap: 0; }
-  .nav-links a { padding-inline: 9px; }
-  .menu-toggle { display: inline-flex; }
+  .nav-inner { gap: 9px; }
   .concern-layout, .tool-split, .source-layout { grid-template-columns: 1fr; gap: 18px; }
   .vivek-app .concern-intro h1 { font-size: clamp(49px, 12vw, 72px); margin-bottom: 12px; }
   .guide-scope { gap: 2px 17px; margin-top: 14px; padding-top: 0; }
@@ -298,6 +352,12 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
   .detail-modal .dialog-content { grid-template-columns: 1fr; }
   .detail-photo { min-height: 180px; }
   .detail-photo img { max-height: 200px; padding: 12px; }
+}
+@media (max-width: 430px) {
+  .compare-bar-inner, .compare-bar-inner > div { gap: 5px; }
+  .vivek-app .compare-bar .primary-action { gap: 6px; padding-inline: 9px; }
+  .detail-info, .comparison-modal .dialog-content { padding-inline: 16px; }
+  .comparison-modal h2 { padding-right: 25px; }
 }
 @media (max-height: 760px) {
   .vivek-app main > #concern { height: auto; min-height: 100svh; }

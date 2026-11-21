@@ -1,9 +1,11 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import LabelScanner from "./label-scanner";
 import ConcernGuide from "./concern-guide";
 import OpeningScreen from "./opening-screen";
+import ProductMotion from "./product-motion";
 
 type Product = { id: string; brand: string; region: string; name: string; description: string | null; category: string | null; image_url: string | null; price: number | null; currency: string | null; ingredients: string[] | null; warnings: string[] | null; age_restrictions: string | null; source_url: string; captured_at: string };
 type Source = { id: string; title: string; url: string; captured_at: string; publisher: string };
@@ -77,9 +79,12 @@ function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen:
         <nav className={menuOpen ? "nav-links open" : "nav-links"} id="main-navigation" aria-label="Main">
           {mainLinks.map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>)}
         </nav>
-        <button className="menu-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
-          <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
-        </button>
+        <div className="nav-actions">
+          <Link className="nav-chat-link" href="/chat">Open chat <span aria-hidden="true">↗</span></Link>
+          <button className="menu-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
+            <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
+          </button>
+        </div>
       </div>
       <OpeningScreen />
     </header>
@@ -138,6 +143,7 @@ export default function VivekApp({ products, generatedAt, coverage }: { products
   const sourceExample = products.find((product) => product.name === "REJUV Niacinamide Serum");
 
   return <>
+    <ProductMotion />
     <Navigation menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
     <main id="main">
       <ConcernGuide catalogSize={products.length} />

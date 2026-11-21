@@ -8,7 +8,7 @@ type Source = { title: string; publisher: string; url: string };
 type Passage = { id: string; title: string; text: string; source: Source };
 type Listing = { id: string; brand: string; name: string; source_url: string; availability: string | null };
 type Ingredient = { name: string; form: string; evidence: Source; products: Listing[] };
-type Result = {
+export type ConcernResponse = {
   status: "guidance" | "care_first" | "urgent" | "clarify" | "outside_coverage";
   message?: string;
   topic?: Topic;
@@ -19,7 +19,7 @@ type Result = {
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const concernLimit = 1000;
+export const concernLimit = 1000;
 
 const examples = [
   ["Scalp flakes", "My scalp is itchy and has white flakes."],
@@ -36,7 +36,7 @@ const examples = [
   ["Constipation", "I have been constipated lately."],
 ];
 
-async function fetchConcern(concern: string, topic?: string, shareFollowup = false): Promise<Result> {
+export async function fetchConcern(concern: string, topic?: string, shareFollowup = false): Promise<ConcernResponse> {
   const response = await fetch(`${API}/api/v1/concerns`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ concern, topic, share_followup: shareFollowup }),
@@ -45,7 +45,7 @@ async function fetchConcern(concern: string, topic?: string, shareFollowup = fal
   return response.json();
 }
 
-function Examples({ pending, select }: { pending: boolean; select: (example: string) => void }) {
+export function Examples({ pending, select }: { pending: boolean; select: (example: string) => void }) {
   const renderExample = ([label, text]: string[]) => (
     <button key={label} type="button" disabled={pending} onClick={() => select(text)}>{label}</button>
   );
@@ -85,12 +85,23 @@ function Ingredients({ ingredients }: { ingredients: Ingredient[] }) {
   </div>;
 }
 
-function ConcernResult({ result, chooseTopic }: { result: Result; chooseTopic: (topic: string) => void }) {
+export function FollowupInfo({ id }: { id: string }) {
+  return <details className="followup-info">
+    <summary aria-label="About follow-up questions"><span aria-hidden="true">i</span></summary>
+    <p id={id}>Sending a follow-up shares your question and the selected guidance passages with Groq. Leave out names and contact details.</p>
+  </details>;
+}
+
+export function ConcernResult({ result, chooseTopic, pending = false }: {
+  result: ConcernResponse;
+  chooseTopic: (topic: string) => void;
+  pending?: boolean;
+}) {
   return <>
     <h3>{result.status === "urgent" ? "Seek urgent help" : result.topic?.title || "Find relevant guidance"}</h3>
     {result.message && <p className="concern-message">{result.message}</p>}
     {result.topics && <div className="concern-examples">
-      {result.topics.map((topic) => <button type="button" key={topic.id} onClick={() => chooseTopic(topic.id)}>{topic.title}</button>)}
+      {result.topics.map((topic) => <button type="button" key={topic.id} disabled={pending} onClick={() => chooseTopic(topic.id)}>{topic.title}</button>)}
     </div>}
     {result.followup?.length ? <div className="concern-followup">
       <h3>Relevant passages for your question</h3><EvidenceCards cards={result.followup} />
@@ -102,11 +113,10 @@ function ConcernResult({ result, chooseTopic }: { result: Result; chooseTopic: (
 
 function useConcernGuide() {
   const [concern, setConcern] = useState("");
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<ConcernResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [followup, setFollowup] = useState<Topic | null>(null);
-  const [consent, setConsent] = useState(false);
   const field = useRef<HTMLTextAreaElement>(null);
   const output = useRef<HTMLDivElement>(null);
 
@@ -132,7 +142,6 @@ function useConcernGuide() {
 
   function selectExample(example: string) {
     setFollowup(null);
-    setConsent(false);
     setConcern(example);
     setResult(null);
     setError("");
@@ -141,24 +150,23 @@ function useConcernGuide() {
 
   function askFollowup(topic: Topic) {
     setFollowup(topic);
-    setConsent(false);
     setConcern("");
     field.current?.focus();
   }
 
-  return { concern, setConcern, result, pending, error, followup, consent, setConsent,
+  return { concern, setConcern, result, pending, error, followup,
     field, output, selectExample, askFollowup, requestGuidance };
 }
 
 function ConcernForm({ guide }: { guide: ReturnType<typeof useConcernGuide> }) {
-  const { concern, setConcern, pending, error, followup, consent, setConsent, field, selectExample, requestGuidance } = guide;
+  const { concern, setConcern, pending, error, followup, field, selectExample, requestGuidance } = guide;
   const [inputLabel, placeholder, submitLabel] = followup
-    ? [`Follow-up about ${followup.title.toLowerCase()}`, "For example: When should I get it checked?", "Find an answer"]
+    ? [`Follow-up about ${followup.title.toLowerCase()}`, "For example: When should I get it checked?", "Ask with Groq"]
     : ["What are you experiencing?", "For example: My scalp is itchy and has white flakes.", "Find guidance"];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void requestGuidance(followup?.id, consent);
+    void requestGuidance(followup?.id, Boolean(followup));
   }
 
   return <form className="concern-form app-frame" onSubmit={submit} aria-busy={pending}>
@@ -173,14 +181,11 @@ function ConcernForm({ guide }: { guide: ReturnType<typeof useConcernGuide> }) {
         setConcern((previous) => `${previous.trimEnd()} ${text}`.trimStart().slice(0, concernLimit));
       }} />
     </div>
-    {followup && <label className="concern-consent">
-      <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
-      Send this follow-up and the selected source passages to Groq to find relevant guidance.
-    </label>}
     <div className="concern-form-actions">
-      <button className="primary-action" type="submit" disabled={pending || Boolean(followup && !consent)}>
+      <button className="primary-action" type="submit" disabled={pending} aria-describedby={followup ? "home-followup-help" : undefined}>
         {pending ? "Finding guidance…" : submitLabel}<span aria-hidden="true">↗</span>
       </button>
+      {followup && <FollowupInfo id="home-followup-help" />}
       {followup && <button className="concern-reset" type="button" disabled={pending} onClick={() => selectExample("")}>Start a new concern</button>}
     </div>
     {!followup && <Examples pending={pending} select={selectExample} />}
@@ -211,7 +216,7 @@ export default function ConcernGuide({ catalogSize }: { catalogSize: number }) {
     <section id="guidance" aria-label="Concern results" hidden={!result}>
       <div className="wrap">
         <div className={result ? `concern-output ${result.status}` : undefined} tabIndex={-1} ref={output} aria-live="polite">
-          {result && <ConcernResult result={result} chooseTopic={(topic) => void requestGuidance(topic)} />}
+          {result && <ConcernResult result={result} pending={guide.pending} chooseTopic={(topic) => void requestGuidance(topic)} />}
           {followupTopic && <button className="concern-reset" type="button" onClick={() => askFollowup(followupTopic)}>Ask a follow-up ↗</button>}
         </div>
       </div>

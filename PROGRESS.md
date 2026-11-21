@@ -45,11 +45,13 @@ Updated: 21 November 2026
 - Product prices and images are observations from brand pages and may change. Ingredients, warnings, age guidance, independent evidence, reviews, and clinical claims are not yet verified or published as facts.
 ## Production preview
 
-- [Vivek](https://vivek-fellowship.onrender.com) and the [FastAPI service](https://vivek-fellowship-api.onrender.com/api/v1/health) are on Render. Both services track the private [Vivek GitHub repository](https://github.com/arshchatrath/vivek). The deployed application commit is `0a561de`.
+- [Vivek](https://vivek-fellowship.onrender.com) and the [FastAPI service](https://vivek-fellowship-api.onrender.com/api/v1/health) are on Render. Both services track the private [Vivek GitHub repository](https://github.com/arshchatrath/vivek). The initial deployment used application commit `0a561de`.
 - Render PostgreSQL 17 and Key Value are private to the Singapore services. Initial deployment verified 323 catalog listings, 323 product embeddings, and 30 guidance passages from 12 topics in the hosted database.
 - The user selected the free Render database, which expires on **21 December 2026 at 18:25 IST**. The API may take about a minute to wake after idle time. Provider credentials are configured in Render's API environment. [Deployment guide](docs/free-deployment.md)
 - Production checks passed for site HTTPS, the mobile browser flow, exact CORS, four-brand catalog coverage, rupee pricing, PostgreSQL concern guidance and follow-ups, pgvector retrieval with Groq citations, and Gnani transcription. Gemini read a synthetic label. When a repeat call returned HTTP 503, Vivek displayed the label-reader fallback.
 - The final API rollout starts directly from the seeded database. The 29 API unit tests passed.
+- Added a dedicated chat at `/chat` with in-page conversation history, voice input, cited guidance, and follow-ups. An information icon explains Groq data sharing beside the follow-up action. The checkbox was removed from the homepage follow-up form too.
+- Added GSAP photo motion for pointer users and transitions for the navigation, dialogs, results, and composer. Motion respects the system preference. Checked the static export at seven viewport sizes from 320px to 1440px, including landscape.
 
 ## Next work requiring external input
 
