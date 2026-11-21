@@ -74,6 +74,10 @@ def test_ingredient_matching_respects_form_and_source():
     assert {item["brand"] for item in ketoconazole["products"]} == {"Be Bodywise", "Man Matters"}
     assert all("shampoo" in item["name"].lower() and "ketoconazole" in item["name"].lower()
                for item in ketoconazole["products"])
+    for listing in ketoconazole["products"]:
+        stored = client.get(f"/api/v1/products/{listing['id']}").json()
+        for field in ("source_url", "image_url", "price", "currency", "captured_at"):
+            assert listing[field] == stored[field]
     result = client.post("/api/v1/concerns", json={"concern": "How do I prevent cavities?"}).json()
     assert result["ingredients"][0]["name"] == "Fluoride"
     assert result["ingredients"][0]["products"] == []

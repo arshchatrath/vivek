@@ -56,6 +56,7 @@ Updated: 21 November 2026
 - Added `hairloss` as a hair-shedding alias and normalized whitespace before matching concerns. Updated the README with a live screenshot, a diagram, and the distinction between initial concern routing and product retrieval.
 - Added local typo matching and hybrid retrieval for the 12 concern guides. Clear matches return saved guidance, ambiguous matches prompt a choice, and urgent or higher-risk requests keep their care-first handling. Initial concern answers need no API keys or Groq credits.
 - Added **Try with Groq** for questions the local router cannot place. It shares the submitted question after a click and uses one request from the existing daily budget. Groq returns a routing decision and Vivek loads guidance from its saved sources.
+- Added product cards near the top of concern answers and in the product question tool. Cards show the listing photo, captured price, source link, and the guide’s match where available. The eight guides with checked listings show those matches, and other covered guides show an empty state.
 
 ## Next work requiring external input
 

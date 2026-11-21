@@ -6,24 +6,20 @@ import LabelScanner from "./label-scanner";
 import ConcernGuide from "./concern-guide";
 import OpeningScreen from "./opening-screen";
 import ProductMotion from "./product-motion";
+import { displayPrice, formatCaptureDate, usdReference } from "./catalog-display";
+import SuggestedProducts, { type ListingSummary } from "./suggested-products";
 
 type Product = { id: string; brand: string; region: string; name: string; description: string | null; category: string | null; image_url: string | null; price: number | null; currency: string | null; ingredients: string[] | null; warnings: string[] | null; age_restrictions: string | null; source_url: string; captured_at: string };
-type Source = { id: string; title: string; url: string; captured_at: string; publisher: string };
+type Source = Pick<ListingSummary, "id" | "captured_at" | "image_url" | "price" | "currency" | "availability"> & {
+  title: string;
+  url: string;
+  publisher: string;
+};
 type Answer = { answer: string; sources: Source[]; status: string; provider: string | null };
 const brands = ["All brands", "Man Matters", "Be Bodywise", "Little Joys", "Root Labs"];
 const productsPerPage = 8;
 const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const date = (value: string) => new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
-const usdReference = { inr: 92.9699, date: "20 Nov 2026", url: "https://www.rbi.org.in/scripts/ReferenceRateArchive.aspx" };
-const rupees = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 });
 const dollars = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-
-function displayPrice({ price, currency }: Product) {
-  if (typeof price !== "number") return "Price unknown";
-  if (currency === "INR") return rupees.format(price);
-  if (currency === "USD") return `${rupees.format(Math.round(price * usdReference.inr))} (est.)`;
-  return "Check listing";
-}
 
 function ExchangeRateNote() {
   return <p>USD prices are estimated in rupees using the <a href={usdReference.url} target="_blank" rel="noopener noreferrer">FBIL reference rate for {usdReference.date}</a>. Checkout prices may differ.</p>;
@@ -53,7 +49,14 @@ function useVivekState(products: Product[], coverage: Record<string, { discovere
       if (!response.ok) throw new Error("API unavailable");
       setAnswer(await response.json());
     } catch {
-      setAnswer({ answer: "The text assistant is offline. You can still inspect and compare official product listings. No AI answer was generated.", sources: compared.map((product) => ({ id: product.id, title: product.name, url: product.source_url, captured_at: product.captured_at, publisher: product.brand })), status: "offline", provider: null });
+      setAnswer({
+        answer: "The text assistant is offline. You can still inspect and compare official product listings.",
+        sources: compared.map(({ id, name, source_url, captured_at, brand, image_url, price, currency }) => ({
+          id, title: name, url: source_url, captured_at, publisher: brand, image_url, price, currency,
+        })),
+        status: "offline",
+        provider: null,
+      });
     } finally { setAsking(false); }
   }
 
@@ -110,7 +113,7 @@ function SourceNotes({ count, discovered, generatedAt, example }: { count: numbe
               <dl className="source-register" data-moment="counter-rolls">
                 <div><dt>Catalog records</dt><dd><span data-count>{count}</span> listings</dd></div>
                 <div><dt>Official sitemap URLs</dt><dd><span data-count>{discovered}</span></dd></div>
-                <div><dt>Catalog snapshot</dt><dd>{date(generatedAt)}</dd></div>
+                <div><dt>Catalog snapshot</dt><dd>{formatCaptureDate(generatedAt)}</dd></div>
               </dl>
             </div>
           </div>
@@ -186,7 +189,7 @@ function ProductCard({ product, selected, atLimit, toggle, setDetail }: CatalogA
           <strong className="product-name">{product.name} <span className="listing-arrow" aria-hidden="true">↗</span></strong>
           <span className="listing-meta">
             <span className="product-price">{displayPrice(product)}</span>
-            <span className="source-mark">Official listing · {date(product.captured_at)}</span>
+            <span className="source-mark">Official listing · {formatCaptureDate(product.captured_at)}</span>
           </span>
         </span>
       </button>
@@ -346,14 +349,14 @@ type AssistantProps = {
 };
 
 function ProductAnswer({ answer, question }: { answer: Answer; question: string }) {
+  const suggestions = answer.sources.map(({ title, publisher, url, ...listing }, index) => ({
+    listing: { ...listing, name: title, brand: publisher, source_url: url },
+    citation: answer.status === "grounded" ? index + 1 : undefined,
+  }));
   return <div className="chat-answer">
     <p className="chat-user">{question}</p>
     <p className="answer-text">{answer.answer}</p>
-    {answer.sources.length > 0 && <ol className="answer-sources">
-      {answer.sources.map((source) => <li key={source.id}>
-        <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title} ↗</a>
-      </li>)}
-    </ol>}
+    {suggestions.length > 0 && <SuggestedProducts products={suggestions} title="Products in this answer" />}
   </div>;
 }
 
@@ -455,7 +458,7 @@ function ProductDetail({ detail, setDetail }: { detail: Product | null; setDetai
         </dl>
         {originalPrice && <ExchangeRateNote />}
         <a className="primary-action" href={detail.source_url} target="_blank" rel="noopener noreferrer">Open original product page ↗</a>
-        <p className="detail-date">Captured {date(detail.captured_at)} · Details may have changed.</p>
+        <p className="detail-date">Captured {formatCaptureDate(detail.captured_at)} · Details may have changed.</p>
       </div>
     </Dialog>
   );

@@ -189,6 +189,7 @@ def checked_products(ingredient: dict, by_url: dict) -> list[dict]:
             continue
         matches.append({key: item.get(key) for key in (
             "id", "brand", "name", "source_url", "captured_at", "availability",
+            "image_url", "price", "currency",
         )})
     return matches
 

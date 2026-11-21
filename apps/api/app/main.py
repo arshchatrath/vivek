@@ -311,7 +311,13 @@ async def chat(payload: ChatRequest, request: Request):
     matches = await run_in_threadpool(relevant_products, payload.question, payload.product_ids)
     if not matches:
         return {"answer": "I could not find a matching product in the verified source catalog. Try a product name or brand. I cannot make a sourced product claim without a matching record.", "sources": [], "status": "knowledge_gap", "provider": None}
-    sources = [{"id": item["id"], "title": item["name"], "url": item["source_url"], "captured_at": item["captured_at"], "publisher": item["brand"]} for item in matches]
+    sources = [
+        {
+            "id": item["id"], "title": item["name"], "url": item["source_url"], "publisher": item["brand"],
+            **{field: item.get(field) for field in ("captured_at", "image_url", "price", "currency", "availability")},
+        }
+        for item in matches
+    ]
     facts = [
         {
             "citation": f"[{number}]", "name": item["name"], "brand": item["brand"],

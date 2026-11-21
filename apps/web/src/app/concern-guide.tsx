@@ -2,12 +2,12 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import ConcernDictation from "./concern-dictation";
+import SuggestedProducts, { type ListingSummary, type ProductSuggestion } from "./suggested-products";
 
 type Topic = { id: string; title: string };
 type Source = { title: string; publisher: string; url: string };
 type Passage = { id: string; title: string; text: string; source: Source };
-type Listing = { id: string; brand: string; name: string; source_url: string; availability: string | null };
-type Ingredient = { name: string; form: string; evidence: Source; products: Listing[] };
+type Ingredient = { name: string; form: string; evidence: Source; products: ListingSummary[] };
 export type ConcernResponse = {
   status: "guidance" | "care_first" | "urgent" | "clarify" | "outside_coverage";
   message?: string;
@@ -68,24 +68,31 @@ function EvidenceCards({ cards }: { cards: Passage[] }) {
   </div>;
 }
 
-function Ingredients({ ingredients }: { ingredients: Ingredient[] }) {
-  return <div className="concern-ingredients">
-    <h3>Ingredients and product examples</h3>
-    <p>These examples match a detail named on the brand’s listing. Check the current package for ingredients and warnings.</p>
+function ConcernProducts({ ingredients }: { ingredients: Ingredient[] }) {
+  const suggestions = new Map<string, ProductSuggestion>();
+  for (const { name, form, evidence, products } of ingredients) {
+    for (const listing of products) {
+      const reasons = suggestions.get(listing.id)?.reasons ?? [];
+      suggestions.set(listing.id, { listing, reasons: [...reasons, { name, form, evidence }] });
+    }
+  }
+  return <SuggestedProducts products={[...suggestions.values()]}
+    note="These listings name an ingredient or product type discussed in the guide. Check the current label for ingredients and warnings." />;
+}
+
+function UnmatchedIngredients({ ingredients }: { ingredients: Ingredient[] }) {
+  const unmatched = ingredients.filter(({ products }) => !products.length);
+  if (!unmatched.length) return null;
+  return <details className="example-list ingredient-guidance">
+    <summary>Ingredient guidance without a catalog match</summary>
     <div className="concern-cards">
-      {ingredients.map((ingredient) => <article className="evidence-card" key={ingredient.name}>
+      {unmatched.map((ingredient) => <article className="evidence-card" key={ingredient.name}>
         <h4>{ingredient.name}</h4>
         <p>{ingredient.form}</p>
         <a href={ingredient.evidence.url} target="_blank" rel="noopener noreferrer">{ingredient.evidence.title} ↗</a>
-        {ingredient.products.length ? <ul>
-          {ingredient.products.map((product) => <li key={product.id}>
-            <a href={product.source_url} target="_blank" rel="noopener noreferrer">{product.name} ↗</a>
-            <small>{product.brand}{product.availability === "OutOfStock" ? " · Out of stock at capture" : ""}</small>
-          </li>)}
-        </ul> : <p className="concern-no-match">No checked match in the current catalog.</p>}
       </article>)}
     </div>
-  </div>;
+  </details>;
 }
 
 export function FollowupInfo({ id }: { id: string }) {
@@ -116,8 +123,9 @@ export function ConcernResult({ result, chooseTopic, tryGroq, pending = false }:
     {result.followup?.length ? <div className="concern-followup">
       <h3>Relevant passages for your question</h3><EvidenceCards cards={result.followup} />
     </div> : null}
+    {result.status === "guidance" && <ConcernProducts ingredients={result.ingredients ?? []} />}
     {result.guidance?.length ? <EvidenceCards cards={result.guidance} /> : null}
-    {result.ingredients?.length ? <Ingredients ingredients={result.ingredients} /> : null}
+    {result.ingredients?.length ? <UnmatchedIngredients ingredients={result.ingredients} /> : null}
   </>;
 }
 

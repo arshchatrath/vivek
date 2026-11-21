@@ -48,7 +48,13 @@ def test_no_api_key_returns_source_cards(monkeypatch):
     response = client.post("/api/v1/chat", json={"question": "What does Man Matters DHT shampoo listing say?"})
     assert response.status_code == 200
     assert response.json()["status"] == "source_only"
-    assert response.json()["sources"]
+    sources = response.json()["sources"]
+    assert sources
+    for source in sources:
+        listing = client.get(f"/api/v1/products/{source['id']}").json()
+        assert source["url"] == listing["source_url"]
+        for field in ("image_url", "price", "currency", "captured_at"):
+            assert source[field] == listing[field]
 
 
 def test_label_requires_consent_and_does_not_call_provider_without_key(monkeypatch):
