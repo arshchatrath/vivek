@@ -1,16 +1,20 @@
+import base64
+import json
 import os
 import sys
 import io
 from pathlib import Path
 
+import httpx
+import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from app.main import app
+from app import main
 
 
-client = TestClient(app)
+client = TestClient(main.app)
 
 
 def test_catalog_has_four_sourced_brands():
@@ -68,4 +72,59 @@ def test_label_requires_consent_and_does_not_call_provider_without_key(monkeypat
     response = client.post("/api/v1/vision/label", files=upload, data={"consent": "true"})
     assert response.status_code == 200
     assert response.json()["status"] == "provider_unavailable"
+
+
+@pytest.mark.parametrize("retry_allowed", [True, False], ids=["fallback-succeeds", "fallback-is-budgeted"])
+def test_label_checks_quota_before_falling_back_from_gemini_503(monkeypatch, retry_allowed):
+    monkeypatch.setenv("ENABLE_IMAGE_ANALYSIS", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_VISION_MODEL", "test-primary-model")
+    events = []
+    requests = []
+    allowed = iter((True, retry_allowed))
+    observation = {"product_name": "Sample Wash", "visible_ingredients": ["Water"]}
+
+    def check_budget(provider):
+        assert provider == "gemini"
+        events.append("quota")
+        return next(allowed)
+
+    def respond(request):
+        events.append("request")
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(503)
+        return httpx.Response(200, json={
+            "candidates": [{"content": {"parts": [{"text": json.dumps(observation)}]}}],
+        })
+
+    transport = httpx.MockTransport(respond)
+    async_client = httpx.AsyncClient
+    monkeypatch.setattr(main, "provider_call_allowed", check_budget)
+    monkeypatch.setattr(main.httpx, "AsyncClient", lambda **kwargs: async_client(transport=transport, **kwargs))
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), "white").save(buffer, format="PNG")
+
+    response = client.post("/api/v1/vision/label", data={"consent": "true"}, files={
+        "image": ("label.png", buffer.getvalue(), "image/png"),
+    })
+
+    assert response.status_code == 200
+    assert requests[0].url.path.endswith("/test-primary-model:generateContent")
+    if retry_allowed:
+        assert events == ["quota", "request", "quota", "request"]
+        assert requests[0].url != requests[1].url
+        primary_photo, photo = [
+            json.loads(request.content)["contents"][0]["parts"][1]["inline_data"] for request in requests
+        ]
+        assert primary_photo == photo
+        assert photo["mime_type"] == "image/jpeg"
+        with Image.open(io.BytesIO(base64.b64decode(photo["data"]))) as cleaned:
+            assert cleaned.format == "JPEG"
+        assert response.json()["status"] == "observed_unverified"
+        assert response.json()["observation"] == observation
+    else:
+        assert events == ["quota", "request", "quota"]
+        assert response.json()["status"] == "provider_unavailable"
+        assert response.json()["observation"] is None
 
