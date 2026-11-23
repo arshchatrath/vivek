@@ -304,6 +304,7 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
 .source-register dd { margin: 0; color: var(--moss); font-size: 14px; font-weight: 750; text-align: right; }
 
 .site-footer { background: var(--sage); color: var(--quiet); }
+footer.closing.site-footer > .wrap { padding-bottom: 6px; }
 .closing__cta { gap: 0; }
 .footer-layout { display: grid; justify-items: start; gap: 8px; }
 .footer-layout p { font-size: 13px; margin: 0; }

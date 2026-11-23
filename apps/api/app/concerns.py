@@ -19,13 +19,13 @@ log = logging.getLogger(__name__)
 URGENT = re.compile(
     r"\b(chest pain|can(?:not|'t) breathe|(?:difficulty|trouble) breathing|shortness of breath|"
     r"(?:lips?|tongue|throat) (?:are |is )?(?:swelling|swollen)|swollen (?:lips?|tongue|throat)|"
-    r"throat (?:is )?closing|severe allergic reaction|anaphylaxis|vomiting blood|blood in (?:my )?vomit|"
+    r"throat (?:is )?closing|severe allergic(?: reaction)?|anaphylaxis|vomiting blood|blood in (?:my )?vomit|"
     r"suicid\w*|(?:kill|harm) myself|unconscious|seizures?)\b"
     r"|सांस नहीं|साँस नहीं|saans (?:nahi|nahin|lene mein)",
     re.I,
 )
 CARE_FIRST = re.compile(
-    r"\b(pregnan\w*|breastfeed\w*|child|kid|baby|infant|teen\w*|minor|under 18|"
+    r"\b(pregnan\w*|breastfeed\w*|child(?:ren)?|kids?|bab(?:y|ies)|infants?|teen\w*|minors?|under 18|"
     r"(?:[1-9]|1[0-7])\s*(?:years?\s*old|yr\s*old)|"
     r"bleeding|blood in (?:my |the )?(?:stool|poo)|(?:cannot|can't) pass gas|vomiting|pus|fever|painful|pain|"
     r"swollen|allergic|allergy|burning|patchy|sudden\w*|blisters?|"
@@ -102,6 +102,16 @@ def typo_near_alias(words: list[str], alias: str) -> bool:
             ):
                 return True
     return False
+
+
+def concern_safety_status(question: str) -> str | None:
+    text = normalize_concern(question)
+    words = ENGLISH_WORDS.findall(text)
+    if URGENT.search(text) or any(typo_near_alias(words, alias) for alias in URGENT_SPELLINGS):
+        return "urgent"
+    if CARE_FIRST.search(text):
+        return "care_first"
+    return None
 
 
 def related_topics(question: str):
@@ -205,14 +215,14 @@ def ingredient_options(guide: dict, products: list[dict]) -> list[dict]:
 
 
 def resolve_concern(request: ConcernRequest, load_products) -> dict:
-    question = normalize_concern(request.concern)
-    words = ENGLISH_WORDS.findall(question)
-    if URGENT.search(question) or any(typo_near_alias(words, alias) for alias in URGENT_SPELLINGS):
+    safety = concern_safety_status(request.concern)
+    if safety == "urgent":
         return {"status": "urgent", "message": URGENT_MESSAGE}
+    question = normalize_concern(request.concern)
     matches = related_topics(question)
     multiple_concerns = len(matches) > 1
     context = request.topic if request.topic in guides() else None
-    care_first = bool(CARE_FIRST.search(question))
+    care_first = safety == "care_first"
     selected = context if context and not request.share_followup and (not matches or context in matches) else None
     if not selected and len(matches) == 1:
         selected = matches[0]

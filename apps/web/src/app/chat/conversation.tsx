@@ -77,6 +77,7 @@ export default function Conversation() {
         <span className="brand-symbol" aria-hidden="true">✳</span>vivek<span className="brand-period">.</span>
       </Link>
       <div className="conversation-links">
+        <Link href="/chat/general">General chat</Link>
         <Link href="/#assistant">Product questions</Link>
         <button className="concern-reset" type="button" disabled={pending !== null || (!turns.length && !draft)} onClick={newChat}>New chat</button>
       </div>
@@ -114,7 +115,7 @@ export default function Conversation() {
 
     <div className="conversation-dock">
       <form className="conversation-composer" onSubmit={submit} aria-busy={pending !== null}>
-        <label className="conversation-sr-only" htmlFor="chat-question">Your question</label>
+        <label className="conversation-label" htmlFor="chat-question">Your question</label>
         <textarea id="chat-question" ref={input} value={draft} onChange={(event) => setDraft(event.target.value)}
           required minLength={3} maxLength={concernLimit} rows={2}
           placeholder={topic ? "Ask a follow-up…" : "Describe your concern…"}

@@ -1,6 +1,6 @@
 # Vivek progress
 
-Updated: 21 November 2026
+Updated: 23 November 2026
 
 ## Decisions
 
@@ -9,6 +9,16 @@ Updated: 21 November 2026
 - Four Mosaic brands are included. The Fellowship story still needs the user's actual interview notes and a clearly described interview cohort; do not invent those findings.
 - Zero-budget architecture: static Next.js export, FastAPI, PostgreSQL with pgvector, Redis quotas, MiniLM embeddings, and free developer API accounts.
 - Health-sensitive fields remain unknown unless explicitly sourced and reviewed. Manufacturer descriptions are not independent clinical evidence.
+
+## General wellness chat
+
+- The sourced conversation stays at `/chat`. The optional general chat at `/chat/general` labels its sharing action **Send to Groq** and describes the history it sends.
+- Both chat routes share urgent and clinician-first checks. General chat checks the submitted question and recent user turns before retrieval or provider use.
+- Search ranks variants of relevant listings using catalog terms, explicit ingredient disclosures, and PostgreSQL's existing product passage index when available.
+- The 323-listing catalog is supplemented in general chat by 62 captured ingredient disclosures, 63 ingredient background notes, and selected nutrition observations for 3 listings. Each captured product claim stays linked to its original listing. Catalog comparisons continue to flag unreviewed fields as unknown.
+- The extractor pairs each capture with its catalog ID and records its SHA-256. Ambiguous sections are skipped. General chat distinguishes provider unavailability, quota limits, and successful answers.
+- The six-slide fellowship deck now includes one coverage slide. PowerPoint rendered all six slides, and the package passed validation.
+- The local PostgreSQL suite passed 90 tests. The agent-harness build, JavaScript scan, and homepage visual gate passed. See `shots/harness-2026-11-23/report.json` for the browser checks, Python advisories, and LibreOffice check status.
 
 ## Completed locally
 

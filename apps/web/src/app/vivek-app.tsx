@@ -120,7 +120,7 @@ function SourceNotes({ count, discovered, generatedAt, example }: { count: numbe
         </div>
         <div className="closing__links footer-layout">
           <a href="#top" className="footer-brand" aria-label="Vivek home">vivek.</a>
-          <p>Educational wellness and product information. Built for the Mosaic Fellowship.</p>
+          <p>Built for the Mosaic Fellowship. <Link href="/chat/general">Open general wellness chat</Link>.</p>
         </div>
       </div>
     </footer>

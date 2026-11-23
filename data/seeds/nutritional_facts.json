@@ -1,0 +1,56 @@
+{
+  "method": "Selected nutrition statements checked against each product listing's capture",
+  "products": [
+    {
+      "product_id": "916856ff-46ad-5da9-af2d-220fe3225fa6",
+      "source_url": "https://manmatters.com/dp/1605",
+      "source_file": "data/artifacts/man-matters/916856ff-46ad-5da9-af2d-220fe3225fa6.md",
+      "capture_sha256": "7362d14df7cfe2f6d2a9e4d3772d0003f064f4a2f2db33916133da925609d738",
+      "serving_size": "1 gummy (approximately 3.7 g)",
+      "source_excerpt": [
+        "Serving size: 1 gummy ("
+      ]
+    },
+    {
+      "product_id": "0248f648-1aed-5ab5-b86d-88d93be167d4",
+      "source_url": "https://ourlittlejoys.com/product/proteinmix",
+      "source_file": "data/artifacts/little-joys/0248f648-1aed-5ab5-b86d-88d93be167d4.md",
+      "capture_sha256": "c3b346815441ddab034db80dcf2468fa1c0cb75481da595772fd86ce41b76086",
+      "nutrients": [
+        {
+          "name": "Protein",
+          "amount": 12,
+          "unit": "g",
+          "basis": "per scoop"
+        }
+      ],
+      "source_excerpt": [
+        "1 Scoop = 12g extra protein"
+      ]
+    },
+    {
+      "product_id": "074c9d7c-a6c6-5f79-b6f2-f2c680ea7830",
+      "source_url": "https://ourlittlejoys.com/product/magnesium-gummies-7-nutrimix-nutrition-powder-kit-strawberry-xp",
+      "source_file": "data/artifacts/little-joys/074c9d7c-a6c6-5f79-b6f2-f2c680ea7830.md",
+      "capture_sha256": "4c7213dfeda6b9c16f4864c9e3bee70acb92fad3e35ad4ec14a2bbe042108416",
+      "nutrients": [
+        {
+          "name": "Elemental magnesium",
+          "amount": 18.7,
+          "unit": "mg",
+          "basis": "per gummy"
+        },
+        {
+          "name": "Protein (Nutrimix)",
+          "amount": 9,
+          "unit": "g",
+          "basis": "per serving"
+        }
+      ],
+      "source_excerpt": [
+        "Provides 18.7 mg of elemental magnesium per gummy.",
+        "9 g of protein per serving"
+      ]
+    }
+  ]
+}
