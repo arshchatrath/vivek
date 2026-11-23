@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/prepare-label-ocr.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/prepare-label-ocr.mjs",
     "build": "next build",
     "lint": "eslint"
   },
   "dependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
     "gsap": "3.15.1",
     "next": "16.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",

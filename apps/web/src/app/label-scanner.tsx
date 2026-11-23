@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { readLabelOnDevice } from "./label-ocr";
 
 type Observation = {
   product_name?: string | null;
@@ -9,23 +10,63 @@ type Observation = {
   visible_warnings?: string[];
   uncertain_text?: string[];
 };
-type ScanResult = { status: string; message: string; observation: Observation | null };
+type ProviderResult = { status: string; message: string; observation: Observation | null };
+type ScanResult =
+  | { kind: "gemini"; message: string; observation: Observation }
+  | { kind: "device"; text: string; fromFallback: boolean }
+  | { kind: "error"; message: string };
 const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const acceptedImages = ["image/jpeg", "image/png", "image/webp"];
 
 function ScanResultView({ result }: { result: ScanResult }) {
+  if (result.kind === "error") {
+    return <div className="label-result" role="status">
+      <strong>Couldn’t read the label</strong>
+      <p>{result.message}</p>
+    </div>;
+  }
+  if (result.kind === "device") {
+    return <div className="label-result" role="status">
+      <strong>Text read on your device</strong>
+      <p>{result.fromFallback && "The Gemini summary was unavailable. "}Check this reading against the package.</p>
+      <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{result.text}</p>
+    </div>;
+  }
+
   const fields = [
-    ["Product", result.observation?.product_name || "Not legible"],
-    ["Brand", result.observation?.brand || "Not legible"],
-    ["Ingredients", result.observation?.visible_ingredients?.join(", ") || "Not legible"],
-    ["Warnings", result.observation?.visible_warnings?.join(", ") || "Not legible"],
-    ["Uncertain text", result.observation?.uncertain_text?.join(", ") || "None reported"],
+    ["Product", result.observation.product_name || "Not legible"],
+    ["Brand", result.observation.brand || "Not legible"],
+    ["Ingredients", result.observation.visible_ingredients?.join(", ") || "Not legible"],
+    ["Warnings", result.observation.visible_warnings?.join(", ") || "Not legible"],
+    ["Uncertain text", result.observation.uncertain_text?.join(", ") || "None reported"],
   ];
   return <div className="label-result" role="status">
-    <strong>{result.status === "observed_unverified" ? "Visible text — unverified" : "Image reading unavailable"}</strong>
+    <strong>Visible text — unverified</strong>
     <p>{result.message}</p>
-    {result.observation && <dl>{fields.map(([label, value]) =>
-      <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
+    <dl>{fields.map(([label, value]) =>
+      <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
   </div>;
+}
+
+async function readLabelWithGemini(file: File): Promise<ScanResult | null> {
+  const form = new FormData();
+  form.append("image", file);
+  form.append("consent", "true");
+  try {
+    const response = await fetch(`${api}/api/v1/vision/label`, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(48_000),
+    });
+    if (!response.ok) return null;
+    const result: ProviderResult = await response.json();
+    if (result.status === "observed_unverified" && result.observation) {
+      return { kind: "gemini", message: result.message, observation: result.observation };
+    }
+  } catch {
+    // An unavailable summary should still allow a local reading.
+  }
+  return null;
 }
 
 function useLabelScan() {
@@ -36,18 +77,24 @@ function useLabelScan() {
 
   async function scan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!file || !consent || busy) return;
+    if (!file || busy) return;
+    if (!acceptedImages.includes(file.type) || file.size > 5_000_000) {
+      setResult({ kind: "error", message: "Choose a JPEG, PNG or WebP photo up to 5 MB." });
+      return;
+    }
     setBusy(true);
     setResult(null);
-    const form = new FormData();
-    form.append("image", file);
-    form.append("consent", "true");
     try {
-      const response = await fetch(`${api}/api/v1/vision/label`, { method: "POST", body: form });
-      if (!response.ok) throw new Error("Image reading unavailable");
-      setResult(await response.json());
+      const summary = consent ? await readLabelWithGemini(file) : null;
+      if (summary) {
+        setResult(summary);
+        return;
+      }
+      const text = await readLabelOnDevice(file);
+      if (!text) throw new Error("No visible text");
+      setResult({ kind: "device", text, fromFallback: consent });
     } catch {
-      setResult({ status: "offline", message: "Image reading is unavailable. Search by product name or type the label into a question.", observation: null });
+      setResult({ kind: "error", message: "Try a sharper, closer photo of the English text, or type the label into a question." });
     } finally {
       setBusy(false);
     }
@@ -63,15 +110,15 @@ export default function LabelScanner({ imageUrl }: { imageUrl?: string | null })
       <h2 id="label-title">Read a product label.</h2>
       <div className="tool-split">
         <div className="tool-copy">
-          <p>Photograph the ingredients or warnings panel. Use the reading to check the names against the original label.</p>
+          <p>Photograph the ingredients or warnings panel. Read English text on your device and check it against the package.</p>
           <form className="label-form" onSubmit={scan} aria-busy={busy}>
             <div className="label-upload">
               <label htmlFor="label-image">Package photo</label>
-              <input id="label-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setFile(event.target.files?.[0] || null); setResult(null); }} />
+              <input id="label-image" type="file" accept={acceptedImages.join(",")} disabled={busy} onChange={(event) => { setFile(event.target.files?.[0] || null); setResult(null); }} />
               <small>JPEG, PNG or WebP · up to 5 MB</small>
             </div>
-            <label className="label-consent"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} /> Send this package photo to Gemini to read the text. Vivek does not retain the image.</label>
-            <button className="primary-action" type="submit" disabled={!file || !consent || busy}>{busy ? "Reading…" : "Read label"} <span aria-hidden="true">↗</span></button>
+            <label className="label-consent"><input type="checkbox" checked={consent} disabled={busy} onChange={(event) => setConsent(event.target.checked)} /> Optional. Send this photo to Gemini for an ingredient and warning summary.</label>
+            <button className="primary-action" type="submit" disabled={!file || busy}>{busy ? "Reading…" : "Read label"} <span aria-hidden="true">↗</span></button>
             {result && <ScanResultView result={result} />}
           </form>
         </div>

@@ -9,6 +9,7 @@
 .taste-skill/
 data/artifacts/
 apps/web/out/
+apps/web/public/ocr/
 shots/
 *.pyc
 
