@@ -145,7 +145,7 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
   background: #f5f8ef; color: #2b402c; font-size: 13px; line-height: 1.3; font-weight: 680;
   transition: background .18s ease, border-color .18s ease;
 }
-.concern-examples button:hover, .concern-reset:hover, .brand-tab:hover:not(:disabled), .nav-chat-link:hover { background: #e7efdf; border-color: #81967a; }
+.concern-examples button:hover, .concern-reset:hover, .brand-tab:hover:not(:disabled, .active), .nav-chat-link:hover { background: #e7efdf; border-color: #81967a; }
 .label-consent { display: flex; align-items: flex-start; gap: 10px; color: var(--quiet); font-size: 13px; line-height: 1.5; cursor: pointer; }
 .label-consent input { margin: 1px 0 0; width: 19px; height: 19px; flex: 0 0 auto; accent-color: var(--moss); }
 .followup-info { position: relative; }
@@ -346,16 +346,59 @@ footer.closing.site-footer > .wrap { padding-bottom: 6px; }
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.vivek-app :is(.dictation-button, .nav-chat-link, .menu-toggle, .compare-add, .modal-close, .followup-info summary, textarea, input, select) {
+@keyframes vivek-dialog-in {
+  from { opacity: .8; translate: 0 6px; scale: .985; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+.vivek-app :is(.dictation-button, .nav-chat-link, .menu-toggle, .compare-add, .modal-close, .followup-info summary, textarea, input, select),
+#catalog .brand-tab {
   transition: background-color .22s var(--ease-v), border-color .22s var(--ease-v), color .22s var(--ease-v), opacity .22s var(--ease-v);
 }
 .vivek-app :is(.nav-chat-link, .menu-toggle, .modal-close):active { translate: 0 1px; }
 .vivek-app :is(.concern-output, .chat-answer, .label-result, .empty-state, .compare-bar, .dictation-status:not(:empty), .product-card),
-.vivek-app :is(.example-list, .followup-info)[open] > :is(.concern-examples, p),
-.vivek-app :is(.detail-modal, .comparison-modal)[open] {
+.vivek-app :is(.example-list, .followup-info)[open] > :is(.concern-examples, p) {
   animation: vivek-appear .28s var(--ease-v) both;
 }
-.vivek-app :is(.detail-modal, .comparison-modal)[open]::backdrop { animation: vivek-fade .24s ease both; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .vivek-app :is(.detail-modal, .comparison-modal)[open] {
+    animation: vivek-dialog-in var(--m-panel) var(--m-ease-enter) backwards;
+  }
+  .vivek-app :is(.detail-modal, .comparison-modal)[open]::backdrop {
+    animation: vivek-fade var(--m-panel) var(--m-ease) backwards;
+  }
+}
+
+@media (min-width: 851px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .site-nav .nav-links a { position: relative; }
+  .site-nav .nav-links a::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 9px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform var(--m-out) var(--m-ease);
+    pointer-events: none;
+  }
+  .site-nav .nav-links a:is(:hover, :focus-visible) { text-decoration: none; }
+  .site-nav .nav-links a:is(:hover, :focus-visible)::after {
+    transform: scaleX(1);
+    transform-origin: left;
+    transition-duration: var(--m-in);
+  }
+  .site-nav .nav-chat-link > [aria-hidden],
+  #concern .concern-form-actions > .primary-action > [aria-hidden] {
+    display: inline-block;
+    transition: translate var(--m-out) var(--m-ease);
+  }
+  .site-nav .nav-chat-link:is(:hover, :focus-visible) > [aria-hidden],
+  #concern .concern-form-actions > .primary-action:not(:disabled):is(:hover, :focus-visible) > [aria-hidden] {
+    translate: 2px -2px;
+    transition-duration: var(--m-in);
+  }
+}
 
 @media (max-width: 940px) {
   .vivek-app .wrap { width: min(1184px, calc(100% - 40px)); }
