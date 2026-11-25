@@ -1,18 +1,21 @@
 # Vivek
 
-Vivek helps people find published wellness guidance, check its sources, and explore official product listings across Man Matters, Be Bodywise, Little Joys, and Root Labs. Built for the Mosaic Fellowship.
+Vivek is my Mosaic Wellness Fellowship project. I started with Be Bodywise to explore how shoppers make sense of ingredients and product claims. Vivek helps them check published wellness guidance, read package labels, and compare official listings from Be Bodywise, Man Matters, Little Joys, and Root Labs.
 
-[Live demo](https://vivek-fellowship.onrender.com) · [Sourced chat](https://vivek-fellowship.onrender.com/chat) · [Product catalog](https://vivek-fellowship.onrender.com/#catalog)
+[Open the live demo](https://vivek-fellowship.onrender.com/)
 
-## Try it
+## Try the live demo
 
-- **Sourced chat** at `/chat`. Ask “My scalp is itchy and has white flakes.” Open the NHS or American Academy of Dermatology source cards before exploring related listings. Optional Groq routing and follow-ups explain what they share.
-- **General chat** at `/chat/general`. Ask “What does salicylic acid do?” or “What is the serving size of Biotin Hair Gummies (30N)?” **Send to Groq** shares the submitted question and up to four recent messages. Replies can include related official listings, ingredient notes, and captured ingredient or nutrition details.
-- **Product catalog** on the homepage. Filter by brand, compare two to four listings, or open a source link to check current details. **Read a label** reads English text from a package photo on the device. An optional checkbox sends the image to Gemini for a summary.
+- **Check a source.** Ask “My scalp is itchy and has white flakes.” The reply pairs related product listings with guidance that links to the NHS and the American Academy of Dermatology. [Sourced Chat](https://vivek-fellowship.onrender.com/chat)
+- **Ask about a product.** Try “What is the serving size of Biotin Hair Gummies (30N)?” Select **Send to Groq** to share the question and up to four recent messages. [General Chat](https://vivek-fellowship.onrender.com/chat/general)
+- **Compare listings.** Filter by Be Bodywise and select two to four products. Open the original listings to check current details and look for fields marked **Not yet verified**. [Product catalog](https://vivek-fellowship.onrender.com/#catalog)
+- **Read a label.** Upload a package photo to extract English text on your device. You can also choose to send the image to Gemini for a summary. [Label reader](https://vivek-fellowship.onrender.com/#label)
 
-![Vivek Chat showing a sample question, sourced scalp guidance, and links to original publishers](docs/images/concern-chat.png)
+The hosted API may take a moment to wake when you send the first question.
 
-## Coverage
+![Sourced Chat response about an itchy scalp, with related product listings and links to NHS and American Academy of Dermatology guidance](docs/images/concern-chat.png)
+
+## What the data covers
 
 | Data | Count |
 | --- | ---: |
@@ -23,13 +26,13 @@ Vivek helps people find published wellness guidance, check its sources, and expl
 | Guided health topics | 12 |
 | Reviewed source passages | 30 |
 
-The catalog stores each listing’s source URL, capture date, displayed price, and field-level provenance. General chat shows ingredient and nutrition observations from the corresponding product captures where available. The catalog and comparison still mark unreviewed fields as unknown. For diagnosis or treatment, speak with a qualified healthcare professional.
+The catalog records each listing’s source URL, capture date, displayed price, and where individual fields came from. Open the brand’s listing for current prices, ingredients, and warnings. For diagnosis or treatment, speak with a qualified healthcare professional.
 
-## How it works
+## How Vivek works
 
-The homepage and catalog read a checked-in snapshot. FastAPI routes urgent and clinician-first questions locally. The sourced chat uses 12 stored guides and, when configured, local MiniLM embeddings and PostgreSQL word matches to help choose a guide.
+The Next.js frontend displays a catalog snapshot stored in this repository. The FastAPI backend checks for questions that need urgent or clinician-first guidance before calling a model provider. Sourced Chat matches a question to stored guides and can use local MiniLM embeddings and PostgreSQL keyword matches to pick a guide.
 
-General chat uses retrieval-augmented generation (RAG). It finds related listings by title, category, and disclosed ingredient. With PostgreSQL configured, it uses the existing product passage index to rank eligible results. It attaches any matching ingredient disclosures and nutrition observations before sending the requested context to Groq.
+General Chat uses retrieval-augmented generation (RAG). It retrieves related listings by title, category, and disclosed ingredient, then sends relevant listing facts, ingredient notes, and captured nutrition details to Groq to generate a reply. When PostgreSQL is available, it uses the product passage index to rank eligible results.
 
 ```mermaid
 flowchart LR
@@ -46,11 +49,11 @@ flowchart LR
 
 ## Run locally on Windows
 
-From the repository root:
+Install Node.js 20.9 or later, Python 3.13, and Docker Compose. Run these commands from the repository root.
 
 ```powershell
-Copy-Item .env.example .env
-docker compose up -d
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up --wait
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r apps/api/requirements.txt
 npm ci --prefix apps/web
@@ -66,7 +69,7 @@ $env:DATABASE_URL = 'postgresql://wellwise:wellwise@127.0.0.1:5432/wellwise'
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir apps/api --host 127.0.0.1 --port 8000
 ```
 
-Start the web app in another terminal and open [localhost:3000](http://localhost:3000).
+Start the web app in another terminal. Once it starts, open [localhost:3000](http://localhost:3000).
 
 ```powershell
 npm run dev --prefix apps/web
@@ -79,12 +82,14 @@ The catalog and sourced guidance run without provider keys. Place optional keys 
 | Feature | Server environment |
 | --- | --- |
 | General chat, product questions, guided chat routing and follow-ups | `GROQ_API_KEY`, optional `GROQ_TEXT_MODEL` |
-| Package-label reading | `GEMINI_API_KEY` and `ENABLE_IMAGE_ANALYSIS=true`, optional `GEMINI_VISION_MODEL` |
+| Optional package-label summary | `GEMINI_API_KEY` and `ENABLE_IMAGE_ANALYSIS=true`, optional `GEMINI_VISION_MODEL` |
 | Microphone input | `GNANI_API_KEY` |
 
-## Refresh and verify
+## Refresh the data and run checks
 
 Run [`scripts/refresh-catalog.ps1`](scripts/refresh-catalog.ps1) with a local database and the [ingestion dependencies](services/ingestion/requirements.txt) installed. Add `-IncludeMarkdown` to capture pages with Crawl4AI. Regenerate ingredient disclosures from the captures with `python services/ingestion/extract_ingredients.py` and review the resulting seed before publishing updates.
+
+Run these checks after setting up and seeding the local database.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest apps/api/tests services/ingestion/tests -q
@@ -92,4 +97,4 @@ npm run lint --prefix apps/web
 npm run build --prefix apps/web
 ```
 
-[Deployment guide](docs/free-deployment.md)
+[Render deployment guide](docs/free-deployment.md)

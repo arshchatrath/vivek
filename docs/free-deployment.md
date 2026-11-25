@@ -1,6 +1,6 @@
 # Vivek Fellowship deployment
 
-The Fellowship demo uses Render's free tier in Singapore. It is publicly accessible over HTTPS and requests `noindex,nofollow`. Share the URL only with the intended reviewers.
+The Fellowship demo uses Render's free tier in Singapore. It is publicly accessible over HTTPS and requests `noindex,nofollow`.
 
 | Resource | Address or name |
 | --- | --- |
@@ -8,7 +8,7 @@ The Fellowship demo uses Render's free tier in Singapore. It is publicly accessi
 | FastAPI service | [vivek-fellowship-api.onrender.com](https://vivek-fellowship-api.onrender.com) |
 | PostgreSQL 17 and pgvector | `vivek-fellowship-db` |
 | Redis-compatible Key Value | `vivek-fellowship-quota` |
-| Private source repository | [arshchatrath/vivek](https://github.com/arshchatrath/vivek) |
+| Source repository | [arshchatrath/vivek](https://github.com/arshchatrath/vivek) |
 
 The database expires **21 December 2026 at 18:25 IST**. Move or replace it before then if the demo needs to stay online. The API can take about one minute to wake up after 15 minutes of inactivity. [Render free-tier documentation](https://render.com/docs/free)
 
