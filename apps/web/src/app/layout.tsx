@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" data-type="software" data-ground="sage" data-radius="round" data-buttons="solid" data-motion="" suppressHydrationWarning>
+  return <html lang="en" data-type="software" data-ground="sage" data-tone="light" data-radius="round" data-buttons="solid" data-motion="" suppressHydrationWarning>
     <head>
       <meta name="page-type" content="software" /><meta name="site-kind" content="software" /><meta name="theme-color" content="#f8f7ef" />
       <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         }, 3200);
       ` }} />
     </head>
-    <body className="vivek-app" id="top">{children}<Script src="/assets/backgrounds/backgrounds.js" strategy="afterInteractive" /><Script src="/assets/system.js" type="module" strategy="afterInteractive" /><Script src="/assets/motion/motion.js" type="module" strategy="afterInteractive" /></body>
+    <body className="vivek-app" id="top">{children}<Script src="/assets/backgrounds/backgrounds.js" strategy="afterInteractive" /><Script src="/site.js" type="module" strategy="afterInteractive" /><Script src="/assets/motion/motion.js" type="module" strategy="afterInteractive" /></body>
   </html>;
 }
 
