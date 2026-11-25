@@ -12,4 +12,5 @@ apps/web/out/
 apps/web/public/ocr/
 shots/
 *.pyc
-
+/output/
+/apps/web/AGENTS.md

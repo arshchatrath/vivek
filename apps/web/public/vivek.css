@@ -127,7 +127,7 @@ button.text-action { border: 0; padding: 0; background: transparent; min-height:
   padding: 0 10px; border: 1px solid #becbb7; border-radius: 8px;
   background: #f5f8ef; color: var(--moss); font-size: 12px; font-weight: 750;
 }
-.dictation-button span { width: 16px; height: 16px; background: currentColor; mask: url("/assets/icons/demo/ui-mic.svg") center / contain no-repeat; }
+.dictation-button span { width: 16px; height: 16px; background: currentColor; mask: url("/assets/mic.svg") center / contain no-repeat; }
 .dictation-button:hover:not(:disabled), .dictation-button[aria-pressed=true] { background: #e5efdc; border-color: #81967a; }
 .dictation-button:disabled { opacity: .6; }
 .dictation-status { grid-column: 1 / -1; }

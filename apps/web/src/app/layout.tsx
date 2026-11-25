@@ -15,9 +15,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <meta name="page-type" content="software" /><meta name="site-kind" content="software" /><meta name="theme-color" content="#f8f7ef" />
       <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400..800&family=JetBrains+Mono:wght@400..500&display=swap" rel="stylesheet" />
-      <link rel="stylesheet" href="/assets/system.css" /><link rel="stylesheet" href="/assets/ui/cards.css" />
+      <link rel="stylesheet" href="/assets/system.css" />
       <link rel="stylesheet" href="/assets/motion/motion.css" /><link rel="stylesheet" href="/assets/backgrounds/backgrounds.css" />
-      <link rel="stylesheet" href="/assets/layout/layout.css" /><link rel="stylesheet" href="/assets/icons/icon.css" /><link rel="stylesheet" href="/vivek.css" />
+      <link rel="stylesheet" href="/assets/layout/layout.css" /><link rel="stylesheet" href="/vivek.css" />
       <link rel="stylesheet" href="/catalog.css" />
       <link rel="modulepreload" href="/assets/moments/moments.js" />
       <link rel="modulepreload" href="/assets/moments/lib.js" />

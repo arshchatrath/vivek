@@ -8,7 +8,7 @@ Vivek helps people find published wellness guidance, check its sources, and expl
 
 - **Sourced chat** at `/chat`. Ask “My scalp is itchy and has white flakes.” Open the NHS or American Academy of Dermatology source cards before exploring related listings. Optional Groq routing and follow-ups explain what they share.
 - **General chat** at `/chat/general`. Ask “What does salicylic acid do?” or “What is the serving size of Biotin Hair Gummies (30N)?” **Send to Groq** shares the submitted question and up to four recent messages. Replies can include related official listings, ingredient notes, and captured ingredient or nutrition details.
-- **Product catalog** on the homepage. Filter by brand, compare two to four listings, or open a source link to check current details. **Read a label** lets you upload package photos with consent.
+- **Product catalog** on the homepage. Filter by brand, compare two to four listings, or open a source link to check current details. **Read a label** reads English text from a package photo on the device. An optional checkbox sends the image to Gemini for a summary.
 
 ![Vivek Chat showing a sample question, sourced scalp guidance, and links to original publishers](docs/images/concern-chat.png)
 
@@ -29,7 +29,7 @@ The catalog stores each listing’s source URL, capture date, displayed price, a
 
 The homepage and catalog read a checked-in snapshot. FastAPI routes urgent and clinician-first questions locally. The sourced chat uses 12 stored guides and, when configured, local MiniLM embeddings and PostgreSQL word matches to help choose a guide.
 
-General chat finds related listings by title, category, and disclosed ingredient. With PostgreSQL configured, it uses the existing product passage index to rank eligible results. It attaches any matching ingredient disclosures and nutrition observations before sending the requested context to Groq.
+General chat uses retrieval-augmented generation (RAG). It finds related listings by title, category, and disclosed ingredient. With PostgreSQL configured, it uses the existing product passage index to rank eligible results. It attaches any matching ingredient disclosures and nutrition observations before sending the requested context to Groq.
 
 ```mermaid
 flowchart LR
@@ -92,4 +92,4 @@ npm run lint --prefix apps/web
 npm run build --prefix apps/web
 ```
 
-[Deployment guide](docs/free-deployment.md) · [Progress](PROGRESS.md) · [Full WellWise specification](WELLWISE_MASTER_BUILD_SPEC.md)
+[Deployment guide](docs/free-deployment.md)

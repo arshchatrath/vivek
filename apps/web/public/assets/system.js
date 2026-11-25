@@ -28,32 +28,6 @@
     scrolled off the top, and hides (data-bar="hidden", inert) while that button, or a link or button
     that does what one of the bar's does (the same address, or the same words), is on the screen;
     never while the focus is in it (references/system.md, Nav).
-  - visuals (assets/effects/fx.js and assets/ui/ui.js are loaded only when the page has any):
-    * mounts every [data-fx] ground; only a ground inside the hero (.hero) moves, and not when its frame
-      holds an object or a scene ([data-print], [data-scene], assets/objects). Every other one is
-      drawn once when it nears the screen, kept as a plain picture and its WebGL context freed
-      (ui.grounds), so a page holds at most
-      3 live WebGL contexts (4 while an object moves on screen); a ground a fragment drives (the
-      slider) stays live near the screen. The featured plan's lit border (data-glow="edge-glow",
-      data-glow-params) rests on a quiet hairline and runs one light round its edge on hover or
-      focus;
-    * lights every ground that holds UI (a .panel, .panel__screen or .frame) and the closing band's
-      (.frame--cta > .frame__fx) with the page's lit ground: <html data-ground="sand|sky|sage|painting">
-      (system.css --ground-*), on light and dark pages alike; without data-ground the page palette
-      picks one. data-fx-palette on the element wins; --hue on it changes only its accent;
-    * starts every pasted [data-ui] fragment (assets/ui/<name>/fragment.html, its names, numbers and
-      logos rewritten to the client's) and loads every [data-ui-load] one (the kit's sample text: a
-      draft only, never shipped). Each holds its
-      finished picture (system.js marks it data-ui-still, so ui.js holds it the moment its own load
-      resolves) unless it, or an element around it, carries data-ui-loop (one per card group) or
-      data-ui-cycles. On a phone (under 640px), on kind other (<meta name="site-kind"
-      content="other">) and on a place nothing loops, voice included, and the hero's ground is drawn
-      once: every fragment holds its finished picture and plays only while the pointer is on its card;
-    * pause buttons: ui.js puts one on every loop when it starts to move (a 32px disc 12px in from
-      the bottom-right corner of its panel or frame); system.js gives the hero's moving ground the
-      same button, shared with a loop in that frame. A box that already holds a .loop-pause (a loop
-      the page runs itself) gets none;
-    * sets <html data-ready="1"> when all of it is drawn (shoot.mjs and consistency.mjs wait for it).
   - page tone: <html data-tone="dark|light"> from the palette's base (a dark footer stays dark).
   - pictures: lazy images are fetched once the page has loaded, so no photograph shows as an empty
     frame; one that fails to load is outlined in red and counted (<html data-broken>).
@@ -63,12 +37,6 @@
 */
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const HERE = new URL('./', import.meta.url);
-/* kind other (a cafe, a shop, a studio, a service firm) and a place: nothing moves by itself (MO-07) */
-const kindOther = () => {
-  const m = document.querySelector('meta[name="site-kind"]');
-  return document.documentElement.dataset.type === 'place' || (!!m && m.content.trim().toLowerCase() === 'other');
-};
-
 function nav() {
   const nav = document.querySelector('.nav');
   if (!nav) return;
@@ -382,7 +350,7 @@ function actionbar() {
   update();
 }
 
-/* ------------------------------------------------------------------ visuals */
+/* ------------------------------------------------------------------ color parsing */
 let probe;
 function rgb(value) {
   value = (value || '').trim();
@@ -396,114 +364,6 @@ function rgb(value) {
   const d = probe.getImageData(0, 0, 1, 1).data;
   return d[3] ? [d[0], d[1], d[2]] : null;
 }
-const hex = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
-
-// The page's lit ground (references/cards.md: sand, sky, sage or painting, <html data-ground>, picked at
-// random from the three on a tech page; a page of kind other has none, it is flat). Without data-ground the
-// page palette picks one, so two sites never share it by default.
-const GROUNDS = ['sand', 'sky', 'sage'];
-function groundTokens() {
-  const html = document.documentElement;
-  if (!html.dataset.ground) {
-    const first = document.querySelector('.card [data-fx], .frame [data-fx], .frame[data-fx]');
-    const root = getComputedStyle(html);
-    const key = `${root.getPropertyValue('--p-bg')}${root.getPropertyValue('--p-accent')}`.replace(/\s/g, '');
-    let h = 0;
-    for (const c of key) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-    html.dataset.ground = first?.dataset.fx === 'painterly-landscape' ? 'painting' : GROUNDS[h % GROUNDS.length];
-  }
-  const cs = getComputedStyle(html);
-  const t = k => cs.getPropertyValue(`--ground-${k}`).trim();
-  return { bg: t('bg'), surface: t('surface'), ink: t('ink'), muted: t('muted'), accent: t('accent') };
-}
-// every ground that holds UI, and the closing band's, takes the lit ground on light and dark pages
-// alike: clearly lighter than a dark card, a clear step darker than white UI, so page, card, panel and
-// UI are never four near-black layers. data-fx-palette on the element wins; --hue changes its accent.
-function lightGrounds() {
-  const g = groundTokens();
-  document.querySelectorAll('[data-fx]').forEach(el => {
-    if (el.dataset.fxPalette) return;
-    const band = el.matches('.frame--cta > .frame__fx');
-    if (!band && !el.matches('.panel, .panel__screen, .frame')) return;
-    const hue = rgb(getComputedStyle(el).getPropertyValue('--hue'));
-    el.dataset.fxPalette = JSON.stringify({ ...g, ...(hue ? { accent: hex(hue) } : {}) });
-    // the box itself takes the lit colour too: an effect that keeps its host's own background (a
-    // frame's dark surface on a dark page) then still draws on the lit ground, and nothing flashes dark
-    if (!band) el.style.backgroundColor = g.bg;
-  });
-}
-
-// the featured plan's lit border (cards.css .plan.is-featured): it rests on a quiet accent hairline;
-// on hover or keyboard focus one light runs round its edge (edge-glow, mounted for that lap, then
-// faded and freed), so nothing moves on its own or because the page scrolled
-function glowOnHover(fx, els) {
-  for (const el of els) {
-    let busy = false;
-    const lap = async () => {
-      if (busy || reduced()) return;
-      busy = true;
-      try {
-        let params = {};
-        try { params = JSON.parse(el.dataset.glowParams || '{}'); } catch { /* defaults */ }
-        const c = await fx.mount(el, el.dataset.glow, { palette: fx.readPalette(el), params, seed: 2 });
-        const r = el.getBoundingClientRect(), per = 2 * (r.width + r.height);
-        await new Promise(res => setTimeout(res, per / Math.max(40, Math.min(c.params?.speed || 400, per / 4)) * 1000));
-        el.classList.add('is-fading');
-        await new Promise(res => setTimeout(res, 650));
-        c.destroy();
-      } catch (e) { console.warn('system.js: glow', e); }
-      el.classList.remove('is-fading');
-      busy = false;
-    };
-    el.addEventListener('pointerenter', lap);
-    el.addEventListener('focusin', lap);
-    fx.load(el.dataset.glow).catch(() => {});
-  }
-}
-
-async function visuals() {
-  // a lit border written as data-fx="edge-glow" is the hover light (data-glow), never a ground
-  document.querySelectorAll('[data-fx="edge-glow"]').forEach(el => {
-    el.dataset.glow = 'edge-glow';
-    if (el.dataset.fxParams && !el.dataset.glowParams) el.dataset.glowParams = el.dataset.fxParams;
-    el.removeAttribute('data-fx');
-  });
-  const grounds = [...document.querySelectorAll('[data-fx]')];
-  const glows = [...document.querySelectorAll('[data-glow]')];
-  const frags = [...document.querySelectorAll('[data-ui-load], [data-ui]')].filter(el => !el.parentElement?.closest('[data-ui-load]'));
-  if (!grounds.length && !frags.length && !glows.length) return;
-  // only the hero's ground moves, and not when its frame holds an object (assets/objects: data-print),
-  // which is then that visual's one motion and its pause button the only one in the corner. On a phone
-  // (under 640px), on kind other and on a place nothing loops: the hero's ground is drawn once like the
-  // rest and every fragment holds its finished picture (as most good sites cut motion there), so no
-  // pause button covers the UI. A held fragment still plays while the pointer is on its card.
-  const phone = window.matchMedia('(max-width: 639px)').matches || kindOther();
-  const box = el => el.closest('.frame, .panel__screen, .panel') || el;
-  const moving = phone ? [] : grounds.filter(el => el.closest('.hero, .section--hero') && !box(el).querySelector('[data-print], [data-scene]'));
-  const live = el => moving.includes(el);
-  const [fx, ui] = await Promise.all([
-    grounds.length || glows.length ? import(new URL('effects/fx.js', HERE).href).then(m => m.default) : null,
-    import(new URL('ui/ui.js', HERE).href).then(m => m.default),
-  ]);
-  const name = el => el.dataset.uiLoad || el.dataset.ui || '';
-  const loops = el => !phone && !!el.closest('[data-ui-loop], [data-ui-cycles]');
-  // a fragment that does not loop is held on its finished picture as soon as its own load resolves
-  frags.forEach(el => { if (!loops(el)) el.setAttribute('data-ui-still', ''); });
-  const opts = el => { try { return JSON.parse(el.dataset.uiOpts || '{}'); } catch { return {}; } };
-  const run = el => (el.dataset.uiLoad ? ui.load(el, el.dataset.uiLoad, opts(el)) : ui.start(el)).catch(e => console.warn(e));
-
-  if (fx) lightGrounds();
-  await Promise.all([
-    // the hero's ground moves and keeps its context; every other ground is baked to a picture
-    fx && Promise.all(moving.map(el => fx.mountAll(el))),
-    fx && grounds.length && ui.grounds(document, fx, { skip: live }),
-    ...frags.map(run),
-  ]);
-  // the hero's ground moves, so it gets the pause button every loop has (one per frame, shared)
-  if (fx && ui) moving.forEach(el => { const c = fx.get(el); if (c) ui.pausable(el.closest('.panel__screen, .panel, .frame') || el, c); });
-  if (fx && glows.length) glowOnHover(fx, glows);
-}
-
 /* ------------------------------------------------------------------ page tone
    <html data-tone="dark|light"> from the palette's base, so a dark footer stays dark on a dark page
    (system.css .footer--dark) instead of turning into the light inverse */
@@ -593,10 +453,9 @@ function init() {
   try { actionbar(); } catch (e) { console.warn('system.js: actionbar', e); const b = document.querySelector('body > nav.actionbar'); if (b) { b.dataset.bar = 'always'; b.inert = false; } }
   try { pictures(); } catch (e) { console.warn('system.js: pictures', e); }
   try { guards(); } catch (e) { console.warn('system.js: guards', e); }
-  Promise.all([
-    visuals().catch(e => console.warn('system.js: visuals', e)),
-    moments().catch(e => console.warn('system.js: moments', e)),
-  ]).finally(() => { document.documentElement.dataset.ready = '1'; });
+  moments()
+    .catch(e => console.warn('system.js: moments', e))
+    .finally(() => { document.documentElement.dataset.ready = '1'; });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
 else init();
